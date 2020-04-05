@@ -33,7 +33,7 @@ while cap.isOpened():
 
         # Write the frame into the file 'output.avi'
         out.write(frame)
-
+   
         # Display the resulting frame
         cv2.imshow('Frame', frame)
 

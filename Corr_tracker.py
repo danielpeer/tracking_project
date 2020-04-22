@@ -4,7 +4,7 @@ import numpy as np
 from scipy import signal
 import math
 import sys
-from mouse_click import *
+from detect_mouse_clicks import *
 
 window_w = 60
 window_h = 60

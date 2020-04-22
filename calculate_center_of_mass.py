@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+from detect_mouse_clicks import *
 
 
 def example(input_video):

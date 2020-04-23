@@ -1,3 +1,4 @@
+import cv2
 from processing_tracking.perform_tracking_utilities import *
 from correlation_filter.corr_tracker import *
 from center_of_mass_filter.calculate_center_of_mass import *
@@ -25,7 +26,7 @@ def perform_tracking():
 
         # Defining the codec and creating VideoWriter object. The output is stored in 'Vid1_Binary.avi' file.
         out1 = cv2.VideoWriter('Corr_Tracker.avi', cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), fps,
-                                   (frame_width, frame_height))
+                               (frame_width, frame_height))
         red = [0, 0, 255]
         # Read until video is completed
         while cap.isOpened():
@@ -40,29 +41,31 @@ def perform_tracking():
                     x, y, target = create_target(gray)
                     select_target_flag = True
 
-                top_left_corner_x, top_left_corner_y, search_window, x_width,\
-                    y_width = create_window(x, y, window_w, window_h, gray)
                 # creating the search window for the current frame
+                top_left_corner_x, top_left_corner_y, search_window, x_width, y_width \
+                    = create_window(x, y, window_w, window_h, gray)
 
-                x, y = get_center_of_mass_prediction2(x, y,  search_window ,top_left_corner_x, top_left_corner_y,
-                                                     x_width, y_width)
+                x, y = get_correlation_prediction(x, y, search_window, target, top_left_corner_x, top_left_corner_y)
+                print(x, y)
+
                 cv2.circle(frame, (y, x), 3, red, -1)
-
-                # Write the frame into the file 'output.avi'
-                out1.write(frame)
 
                 # Display the resulting frame
                 cv2.imshow('Frame', frame)
+
+                # Write the frame into the file
+                out1.write(frame)
+
                 # Press Q on keyboard to  exit
                 if cv2.waitKey(25) & 0xFF == ord('q'):
                     break
             else:
                 break
-                # When everything done, release the video capture object
+        # When everything done, release the video capture object
         cap.release()
         out1.release()
 
-            # Closes all the frames
+        # Closes all the frames
         cv2.destroyAllWindows()
     except IOError:
         print("File not accessible")

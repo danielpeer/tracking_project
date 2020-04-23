@@ -1,4 +1,5 @@
 import cv2
+import math
 
 ############################################################### Search Window #####################################################
 
@@ -7,6 +8,14 @@ window_w = 60
 window_h = 60
 target_w = 5
 target_h = 5
+
+
+def truncate(n, decimals=0):
+    if n == 0:
+        return 0
+    multiplier = 10 ** decimals
+    return float(n * multiplier) / multiplier
+
 
 def create_window(x, y, window_w, window_h, gray):
     """
@@ -19,23 +28,25 @@ def create_window(x, y, window_w, window_h, gray):
     x_window = x
     y_window = y
     gray_width, gray_height = gray.shape
-    top_left_corner_x = x - window_w
-    top_left_corner_y = y - window_h
-    if x - window_w < 0:
-        x_window = window_w
+    top_left_corner_x = x - (window_w / 2)
+    top_left_corner_y = y - (window_h / 2)
+    if x - (window_w / 2) < 0:
+        x_window = window_w / 2
         top_left_corner_x = 0
-    if y - window_h < 0:
-        y_window = window_h
+    if y - (window_h / 2) < 0:
+        y_window = window_h / 2
         top_left_corner_y = 0
-    if x + window_w > gray_width:
-        x_window = gray_width
-    if y + window_h > gray_height:
-        y_window = gray_height
-    search_window = gray[x_window - window_w: x_window + window_w, y_window - window_h: y_window + window_h]
-    return top_left_corner_x, top_left_corner_y, search_window,search_window.shape[0], search_window.shape[1]
+    if x + (window_w / 2) > gray_width:
+        x_window = gray_width - (window_w / 2)
+    if y + (window_h / 2) > gray_height:
+        y_window = gray_height - (window_h / 2)
+    search_window = gray[int(x_window - math.floor(window_w / 2)): int(x_window + math.floor(window_w / 2)),
+                    int(y_window - math.floor((window_h / 2))): int(y_window + math.floor(window_h / 2))]
+    return top_left_corner_x, top_left_corner_y, search_window, search_window.shape[0], search_window.shape[1]
+
 
 ######################################### detect mouse clicks #####################################################################
-refPt =(0,0)
+refPt = (0, 0)
 pressed = False
 
 
@@ -64,8 +75,6 @@ def get_square_center(first_frame):
     return refPt
 
 
-
-
 ################################################ target position ##################################################################
 
 def create_target(gray):
@@ -78,16 +87,16 @@ def create_target(gray):
     gray_width, gray_height = gray.shape
     x_targ = x
     y_targ = y
-    if x_targ - target_w < 0:
-        x_targ = target_w
-    if y_targ - target_h < 0:
-        y_targ = target_w
-    if x_targ + 15 > gray_width:
-        x_targ = gray_width
-    if y_targ + 15 > gray_height:
-        y_targ = gray_height
-    target = gray[x_targ - target_w: x_targ + target_w, y_targ - target_h: y_targ + target_h]
+    if x_targ - (target_w / 2) < 0:
+        x_targ = (target_w / 2)
+    if y_targ - (target_h / 2) < 0:
+        y_targ = (target_w / 2)
+    if x_targ + (target_w / 2) > gray_width:
+        x_targ = gray_width - (target_w / 2)
+    if y_targ + (target_h / 2) > gray_height:
+        y_targ = gray_height - (target_h / 2)
+    target = gray[int(x_targ - math.floor(target_w / 2)): int(x_targ + math.floor(target_w / 2)),
+             int(y_targ - math.floor(target_h / 2)): int(y_targ + math.floor(target_h / 2))]
     return x, y, target
 
 ##########################################################################################################
-

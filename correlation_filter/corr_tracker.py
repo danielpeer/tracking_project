@@ -1,6 +1,8 @@
+import cv2
 import numpy as np
+from scipy.special import logsumexp
 import math
-
+from processing_tracking.perform_tracking_utilities import *
 
 window_w = 60
 window_h = 60
@@ -21,7 +23,9 @@ def normalizeArray(window):
     norm_window = np.zeros(window.shape, 'd')
     for x in range(0, width):
         for y in range(0, height):
-            norm_window[x, y] = float("{:.2f}".format(window[x, y])) / max_val
+            if window[x, y] == 0:
+                norm_window[x, y] = 0
+            norm_window[x, y] = round(window[x, y] / max_val,2)
     return norm_window
 
 
@@ -33,7 +37,7 @@ def correlation(window, target):
     """
     coef_mat = np.zeros(window.shape)  # a matrix to store the coefficients
     targ_mean = target.mean()
-    window_w, window_h = window.shape  # get frame width and height
+    window_w, window_h = window.shape  # get window width and height
     targ_w, targ_h = target.shape  # get target width and height
 
     # start searching for the target in the search window via correlation
@@ -75,13 +79,13 @@ def correlation(window, target):
             else:
                 temp = s1 / math.sqrt(denom)
 
-            coef_mat[i, j] = temp
+            coef_mat[i, j] = float("{:.2f}".format(temp))
     return coef_mat
 
 
 def get_correlation_prediction(x, y, search_window, target, top_left_corner_x, top_left_corner_y):
     corr = correlation(search_window, target)
-    corr = normalizeArray(corr)
+    #corr = normalizeArray(corr)
     x_max, y_max = np.unravel_index(np.argmax(corr), corr.shape)  # find the relative coordinates of highest correlation
     if x < window_w:
         x = x_max
@@ -92,5 +96,3 @@ def get_correlation_prediction(x, y, search_window, target, top_left_corner_x, t
     else:
         y = top_left_corner_y + y_max
     return x, y
-
-

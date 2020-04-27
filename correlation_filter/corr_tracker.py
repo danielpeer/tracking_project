@@ -8,7 +8,8 @@ window_w = 60
 window_h = 60
 target_w = 5
 target_h = 5
-
+image_w = 1200
+image_h = 1200
 
 def normalizeArray(window):
     """
@@ -37,7 +38,7 @@ def correlation(window, target):
     """
     coef_mat = np.zeros(window.shape)  # a matrix to store the coefficients
     targ_mean = target.mean()
-    window_w, window_h = window.shape  # get window width and height
+    window_w, window_h = window.shape  # get frame width and height
     targ_w, targ_h = target.shape  # get target width and height
 
     # start searching for the target in the search window via correlation
@@ -79,7 +80,7 @@ def correlation(window, target):
             else:
                 temp = s1 / math.sqrt(denom)
 
-            coef_mat[i, j] = float("{:.2f}".format(temp))
+            coef_mat[i, j] = temp
     return coef_mat
 
 
@@ -87,12 +88,12 @@ def get_correlation_prediction(x, y, search_window, target, top_left_corner_x, t
     corr = correlation(search_window, target)
     #corr = normalizeArray(corr)
     x_max, y_max = np.unravel_index(np.argmax(corr), corr.shape)  # find the relative coordinates of highest correlation
-    if x < window_w:
-        x = x_max
-    else:
-        x = top_left_corner_x + x_max
-    if y < window_h:
-        y = y_max
-    else:
-        y = top_left_corner_y + y_max
-    return x, y
+    if x_max < window_w / 2 and abs(x_max - window_w / 2) > 5:
+        x = max(top_left_corner_x - x_max, 0)
+    elif x_max > window_w / 2 and abs(x_max - window_w / 2) > 5:
+        x = min(top_left_corner_x + x_max, 1200)
+    if y_max  < window_h / 2 and abs(y_max - window_h / 2) > 5:
+        y = max(top_left_corner_y - y_max, 0)
+    elif y_max > window_h / 2 and abs(y_max - window_h / 2) > 5:
+        y = min(top_left_corner_y + y_max, 1200)
+    return int(x), int(y)

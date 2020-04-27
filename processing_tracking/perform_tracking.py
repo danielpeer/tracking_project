@@ -4,9 +4,13 @@ from correlation_filter.corr_tracker import *
 from center_of_mass_filter.calculate_center_of_mass import *
 from kalman_filter.kalman_filter import *
 
+system_mode =  "debug "
 
 def perform_tracking():
-    input_video = input("Please enter a video path:\n")
+    if system_mode != "debug ":
+        input_video = input("Please enter a video path:\n")
+    else:
+        input_video = "C:\\Users\\danielpeer\\PycharmProjects\\tracking_project\\videos\\conceal1.avi"
     try:
         cap = cv2.VideoCapture(input_video)
         select_target_flag = False
@@ -42,12 +46,12 @@ def perform_tracking():
                     select_target_flag = True
 
                 # creating the search window for the current frame
-                top_left_corner_x, top_left_corner_y, search_window, x_width, y_width \
-                    = create_window(x, y, window_w, window_h, gray)
-
-                x, y = get_correlation_prediction(x, y, search_window, target, top_left_corner_x, top_left_corner_y)
-                print(x, y)
-
+                top_left_corner_x, top_left_corner_y, search_window = create_window(x, y, window_w, window_h, gray)
+                a = kalman_filter((x, y),fps)
+                measurment_x, measurment_y = get_center_of_mass_prediction(x, y, search_window, top_left_corner_x,
+                                                               top_left_corner_y)
+                measurment = a.get_prediction(np.array([[measurment_x],[measurment_y]]))
+                x, y = int(measurment[0]),int(measurment[1])
                 cv2.circle(frame, (y, x), 3, red, -1)
 
                 # Display the resulting frame
@@ -68,6 +72,7 @@ def perform_tracking():
         # Closes all the frames
         cv2.destroyAllWindows()
     except IOError:
+        print(IOError)
         print("File not accessible")
 
 

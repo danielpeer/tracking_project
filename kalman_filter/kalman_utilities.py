@@ -2,7 +2,7 @@ import numpy as np
 
 global delta_t
 global G
-
+sigma_a = 0
 
 def init_global_variables(frames_per_seconds):
     global delta_t, G
@@ -12,11 +12,11 @@ def init_global_variables(frames_per_seconds):
 
 def init_state_transition(sigma_a):
     ak = np.random.normal(0, sigma_a)
-    return np.array([[1, 0, delta_t, 0], [0, 1, 0, delta_t], [0, 0, 1, 0], [0, 0, 0, 1]]) + G * ak
+    return np.array([[1, 0, delta_t, 0], [0, 1, 0, delta_t], [0, 0, 1, 0], [0, 0, 0, 1]])
 
 
 def init_state_vector(initial_location):
-    return np.array([[initial_location[0]], [initial_location[1]], [0], [0]])
+    return np.array([[initial_location[0]], [initial_location[1]], [0.5], [0.5]])
 
 
 def init_measuring_matrix():
@@ -24,12 +24,12 @@ def init_measuring_matrix():
 
 
 def init_covariance_matrix():
-    return np.array([[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]])
+    return np.array([[10, 0, 0, 0], [0, 10, 0, 0], [0, 0, 10, 0], [0, 0, 0, 10]])
 
 
 def init_process_noise_covariance():
-    return np.array([[1, 0], [0, 1]])
+    return np.array([[0, 0], [0, 0]])
 
 
-def init_measurement_noise(sigma_a):
+def init_measurement_noise():
     return G * G.T * sigma_a

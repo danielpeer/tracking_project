@@ -27,16 +27,17 @@ class kalman_filter:
 
     def projects(self):
         self.current_state = dot(self.state_transition, self.current_state)
-        self.covariance = dot(self.state_transition, dot(self.covariance, self.state_transition.T)) + self.measurement_noise
+        self.covariance = dot(self.state_transition, dot(self.covariance, self.state_transition.T))
 
     def update(self, measurement):
         Ck = dot(self.measuring_matrix, self.current_state)
-        IS = dot(self.measuring_matrix, dot(self.covariance, self.measuring_matrix.T)) + self.process_noise_convairance
+        IS = dot(self.measuring_matrix, dot(self.covariance, self.measuring_matrix.T)) + self.process_noise_covariance
         K = dot(self.covariance, dot(self.measuring_matrix.T, inv(IS)))
         self.current_state = self.current_state + dot(K, (measurement - Ck))
-        self.covariance = (np.identity(4) - K * self.measuring_matrix) * self.covariance * (np.identity(4) - K * self.measuring_matrix).T
+        self.covariance = dot(np.identity(4) - dot(K, self.measuring_matrix), self.covariance)
 
     def get_prediction(self, measurement):
+        self.update(measurement)
         self.projects()
-        self.update()
-        return measurement - dot(self.measuring_matrix, self.current_state)
+        print(self.current_state)
+        return dot(self.measuring_matrix, self.current_state)

@@ -42,7 +42,7 @@ def create_window(x, y, window_w, window_h, gray):
         y_window = gray_height - (window_h / 2)
     search_window = gray[int(x_window - math.floor(window_w / 2)): int(x_window + math.floor(window_w / 2)),
                     int(y_window - math.floor((window_h / 2))): int(y_window + math.floor(window_h / 2))]
-    return top_left_corner_x, top_left_corner_y, search_window, search_window.shape[0], search_window.shape[1]
+    return top_left_corner_x, top_left_corner_y, search_window
 
 
 ######################################### detect mouse clicks #####################################################################

@@ -24,11 +24,11 @@ def init_measuring_matrix():
 
 
 def init_covariance_matrix():
-    return np.array([[10, 0, 0, 0], [0, 10, 0, 0], [0, 0, 10, 0], [0, 0, 0, 10]])
+    return np.array([[10000, 0, 0, 0], [0, 30000, 0, 0], [0, 0, 20000, 0], [0, 0, 0, 15000]])
 
 
 def init_process_noise_covariance():
-    return np.array([[0, 0], [0, 0]])
+    return np.array([[1, 0], [0, 1]])
 
 
 def init_measurement_noise():

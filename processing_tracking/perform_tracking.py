@@ -10,7 +10,7 @@ def perform_tracking():
     if system_mode != "debug ":
         input_video = input("Please enter a video path:\n")
     else:
-        input_video = "C:\\Users\\danielpeer\\PycharmProjects\\tracking_project\\videos\\conceal1.avi"
+        input_video = "C:\\Users\\Z41\\PycharmProjects\\tracking_project\\videos\\conceal1.avi"
     try:
         cap = cv2.VideoCapture(input_video)
         select_target_flag = False

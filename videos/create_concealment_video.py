@@ -18,7 +18,7 @@ fourcc = VideoWriter_fourcc(*'MP42')
 video = VideoWriter('conceal1.avi', fourcc, float(FPS), (width, height))
 for paint_x in range(0, width - square_width, 6):
     frame = np.zeros((height, width, 3), np.uint8)
-    concealment = cv2.rectangle(frame, (500, 0), (700, 1200), color, -1)
+    concealment = cv2.rectangle(frame, (400, 0), (600, 1200), color, -1)
     frame = frame + concealment
     cv2.rectangle(frame, (paint_x, paint_h), (paint_x + square_width, square_width + paint_h), color, -1)
     video.write(frame)
@@ -35,6 +35,20 @@ for paint_x in range(0, width - square_width, 6):
     video.write(frame)
 video.release()
 
+# video #3 - two concealments + diagonal move
+video = VideoWriter('conceal3.avi', fourcc, float(FPS), (width, height))
+for paint_x in range(0, width - square_width, 6):
+    frame = np.zeros((height, width, 3), np.uint8)
+    concealment1 = cv2.rectangle(frame, (400, 0), (450, 1200), color, -1)
+    concealment2 = cv2.rectangle(frame, (800, 0), (850, 1200), color, -1)
+    frame = frame + concealment1 + concealment2
+    if paint_x < 500:
+        cv2.rectangle(frame, (paint_x, paint_h), (paint_x + square_width, square_width + paint_h), color, -1)
+    else:
+        paint_h = paint_h - 3
+        cv2.rectangle(frame, (paint_x, paint_h), (paint_x + square_width, square_width + paint_h), color, -1)
+    video.write(frame)
+video.release()
 '''
 video = VideoWriter('conceal.avi', fourcc, float(FPS), (width, height))
 for paint_x in range(0, width - square_width, 6):

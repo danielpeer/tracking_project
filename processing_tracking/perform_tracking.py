@@ -4,13 +4,14 @@ from correlation_filter.corr_tracker import *
 from center_of_mass_filter.calculate_center_of_mass import *
 from kalman_filter.kalman_filter import *
 
-system_mode =  "debug "
+system_mode = "debug "
+
 
 def perform_tracking():
     if system_mode != "debug ":
         input_video = input("Please enter a video path:\n")
     else:
-        input_video = "C:\\Users\\Z41\\PycharmProjects\\tracking_project\\videos\\conceal1.avi"
+        input_video = "C:\\Users\\Z41\\PycharmProjects\\tracking_project\\videos\\conceal3.avi"
     try:
         cap = cv2.VideoCapture(input_video)
         select_target_flag = False
@@ -29,7 +30,7 @@ def perform_tracking():
         fps = int(cap.get(cv2.CAP_PROP_FPS))
 
         # Defining the codec and creating VideoWriter object. The output is stored in 'Vid1_Binary.avi' file.
-        out1 = cv2.VideoWriter('Corr_Tracker.avi', cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), fps,
+        out1 = cv2.VideoWriter('Corr_Tracker_conceal3.avi', cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), fps,
                                (frame_width, frame_height))
         red = [0, 0, 255]
         # Read until video is completed
@@ -45,13 +46,14 @@ def perform_tracking():
                     select_target_flag = True
                     kalman = kalman_filter((x, y), fps)
 
-                window_w = target.shape[0] * 6
-                window_h = target.shape[1] * 6
+                window_w = target.shape[0] * 10
+                window_h = target.shape[1] * 10
                 # creating the search window for the current frame
                 top_left_corner_x, top_left_corner_y, search_window = create_window(x, y, window_w, window_h, gray)
-                measurment_x, measurment_y = get_correlation_prediction(x, y, search_window, target, top_left_corner_x, top_left_corner_y)
+                measurment_x, measurment_y = get_correlation_prediction(x, y, search_window, target, top_left_corner_x,
+                                                                        top_left_corner_y)
                 measurment = kalman.get_prediction(np.array([[measurment_x], [measurment_y]]))
-                x, y = int(measurment[0]),int(measurment[1])
+                x, y = int(measurment[0]), int(measurment[1])
                 cv2.circle(frame, (y, x), 3, red, -1)
 
                 # Display the resulting frame

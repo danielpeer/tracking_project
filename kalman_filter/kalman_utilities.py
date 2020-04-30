@@ -36,4 +36,4 @@ def init_measurement_noise():
     return G * G.T * sigma_a
 
 def init_R_maximum():
-    return np.array([[100000, 100000], [100000, 100000]])
+    return np.array([[1000000, 0], [0, 1000000]])

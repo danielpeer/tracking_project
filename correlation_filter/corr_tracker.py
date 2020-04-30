@@ -133,9 +133,9 @@ def detect_if_object_is_hidden(corr, target_shape):
     matched_indices = np.argwhere(corr >= THRESHOLD)
     if len(matched_indices) > 1:
         for indices in matched_indices:
-            if object_pos[0] - indices[0] > target_shape[0]:
+            if abs(object_pos[0] - indices[0]) >= target_shape[0]:
                 return OBJECT_IS_HIDDEN
-            if object_pos[1] - indices[1] >= target_shape[1]:
+            if abs(object_pos[1] - indices[1]) >= target_shape[1]:
                 return OBJECT_IS_HIDDEN
     return OBJECT_IS_NOT_HIDDEN
 
@@ -143,7 +143,7 @@ def detect_if_object_is_hidden(corr, target_shape):
 def get_correlation_prediction(x, y, search_window, target, top_left_corner_x, top_left_corner_y):
     corr = correlation2(search_window, target)
     if detect_if_object_is_hidden(corr, target.shape) == OBJECT_IS_HIDDEN:
-        return (-1,-1)
+        return (-1, -1)
     x_max, y_max = np.unravel_index(np.argmax(corr), corr.shape)   # find the relative coordinates of highest correlation
     x_max += math.floor(target.shape[0]/2)
     y_max += math.floor(target.shape[1]/2)

@@ -2,11 +2,11 @@ import cv2
 import math
 import numpy as np
 
-
 window_w = 60
 window_h = 60
 target_w = 5
 target_h = 5
+
 
 ############################################################### Search Window #####################################################
 
@@ -91,6 +91,7 @@ def create_object_target(gray):
              left_y: right_y + 1]
     return x, y, target
 
+
 def create_target(gray):
     """
     creating the target matrix for the correlation algorithm
@@ -113,10 +114,11 @@ def create_target(gray):
              int(y_targ - math.floor(target_h / 2)): int(y_targ + math.floor(target_h / 2))]
     return x, y, target
 
+
 ##########################################################################################################
 
 
-def get_white_square_dims(x,y,image):
+def get_white_square_dims(x, y, image):
     current_x = x
     while current_x >= 0 and image[current_x, y] != 0:
         current_x -= 1
@@ -130,8 +132,7 @@ def get_white_square_dims(x,y,image):
         current_y += 1
     right_y = current_y - 1
     current_y = y
-    while current_y >= 0 and image[x,  current_y] != 0:
+    while current_y >= 0 and image[x, current_y] != 0:
         current_y -= 1
-    left_y = current_y +1
-    return (top_x,lowest_x,left_y, right_y)
-
+    left_y = current_y + 1
+    return (top_x, lowest_x, left_y, right_y)

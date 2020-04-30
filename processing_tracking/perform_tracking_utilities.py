@@ -4,8 +4,8 @@ import numpy as np
 
 window_w = 60
 window_h = 60
-target_w = 5
-target_h = 5
+target_w = 30
+target_h = 30
 
 
 ############################################################### Search Window #####################################################
@@ -38,10 +38,12 @@ def create_window(x, y, window_w, window_h, gray):
         top_left_corner_y = 0
     if x + (window_w / 2) > gray_width:
         x_window = gray_width - (window_w / 2)
+        top_left_corner_x = gray_width - window_w
     if y + (window_h / 2) > gray_height:
         y_window = gray_height - (window_h / 2)
+        top_left_corner_y = gray_height - window_h
     search_window = gray[int(x_window - math.floor(window_w / 2)): int(x_window + math.floor(window_w / 2)),
-                    int(y_window - math.floor((window_h / 2))): int(y_window + math.floor(window_h / 2))]
+                    int(y_window - math.floor(window_h / 2)): int(y_window + math.floor(window_h / 2))]
     return top_left_corner_x, top_left_corner_y, search_window
 
 
@@ -105,7 +107,7 @@ def create_target(gray):
     if x_targ - (target_w / 2) < 0:
         x_targ = (target_w / 2)
     if y_targ - (target_h / 2) < 0:
-        y_targ = (target_w / 2)
+        y_targ = (target_h / 2)
     if x_targ + (target_w / 2) > gray_width:
         x_targ = gray_width - (target_w / 2)
     if y_targ + (target_h / 2) > gray_height:

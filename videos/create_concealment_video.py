@@ -1,3 +1,5 @@
+import math
+
 import cv2
 import numpy as np
 import random
@@ -60,6 +62,25 @@ for paint_x in range(0, width - square_width, 6):
     diag_h = diag_h - 3
     video.write(frame)
 video.release()
+
+# video #5 - sine wave run
+video = VideoWriter('conceal5.avi', fourcc, float(FPS), (width, height))
+i = 0
+for paint_x in range(0, width - square_width, 6):
+    frame = np.zeros((height, width, 3), np.uint8)
+    # Compute the x and y coordinates for points on a sine curve
+    x = np.arange(0, 3 * np.pi, 0.2)
+    y = np.sin(x)
+    cv2.rectangle(frame, (paint_x, paint_h + math.floor(y[i] * 90)),
+                  (paint_x + square_width, paint_h + math.floor(y[i] * 90) - square_width), color,
+                  -1)
+    if x[i] == 9.4:
+        i = 0
+    else:
+        i += 1
+    video.write(frame)
+video.release()
+
 '''
 video = VideoWriter('conceal.avi', fourcc, float(FPS), (width, height))
 for paint_x in range(0, width - square_width, 6):

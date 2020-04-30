@@ -46,8 +46,8 @@ def perform_tracking():
                     select_target_flag = True
                     kalman = kalman_filter((x, y), fps)
 
-                window_w = target.shape[0] * 10
-                window_h = target.shape[1] * 10
+                window_w = target.shape[0] * 6
+                window_h = target.shape[1] * 6
                 # creating the search window for the current frame
                 top_left_corner_x, top_left_corner_y, search_window = create_window(x, y, window_w, window_h, gray)
                 measurment_x, measurment_y = get_correlation_prediction(x, y, search_window, target, top_left_corner_x,
@@ -55,7 +55,7 @@ def perform_tracking():
                 measurment = kalman.get_prediction(np.array([[measurment_x], [measurment_y]]))
                 x, y = int(measurment[0]), int(measurment[1])
                 cv2.circle(frame, (y, x), 3, red, -1)
-
+                print(x,y)
                 # Display the resulting frame
                 cv2.imshow('Frame', frame)
 

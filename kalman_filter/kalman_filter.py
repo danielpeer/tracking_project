@@ -37,7 +37,7 @@ class kalman_filter:
             self.process_noise_covariance = init_R_maximum()
         else:
             self.process_noise_covariance = init_process_noise_covariance()
-        print(self.process_noise_covariance)
+        #print(self.process_noise_covariance)
         IS = dot(self.measuring_matrix, dot(self.covariance, self.measuring_matrix.T)) + self.process_noise_covariance
         K = dot(self.covariance, dot(self.measuring_matrix.T, inv(IS)))
         self.current_state = self.current_state + dot(K, (measurement - Ck))
@@ -46,5 +46,5 @@ class kalman_filter:
     def get_prediction(self, measurement):
         self.projects()
         self.update(measurement)
-        print(self.current_state[2], self.current_state[3])
+        #print(self.current_state[2], self.current_state[3])
         return dot(self.measuring_matrix, self.current_state)

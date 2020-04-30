@@ -37,6 +37,7 @@ video.release()
 
 # video #3 - two concealments + diagonal move
 video = VideoWriter('conceal3.avi', fourcc, float(FPS), (width, height))
+diag_h = paint_h
 for paint_x in range(0, width - square_width, 6):
     frame = np.zeros((height, width, 3), np.uint8)
     concealment1 = cv2.rectangle(frame, (400, 0), (450, 1200), color, -1)
@@ -45,8 +46,18 @@ for paint_x in range(0, width - square_width, 6):
     if paint_x < 500:
         cv2.rectangle(frame, (paint_x, paint_h), (paint_x + square_width, square_width + paint_h), color, -1)
     else:
-        paint_h = paint_h - 3
-        cv2.rectangle(frame, (paint_x, paint_h), (paint_x + square_width, square_width + paint_h), color, -1)
+        diag_h = diag_h - 3
+        cv2.rectangle(frame, (paint_x, diag_h), (paint_x + square_width, square_width + diag_h), color, -1)
+    video.write(frame)
+video.release()
+
+# video #4 - diagonal run
+video = VideoWriter('conceal4.avi', fourcc, float(FPS), (width, height))
+diag_h = paint_h
+for paint_x in range(0, width - square_width, 6):
+    frame = np.zeros((height, width, 3), np.uint8)
+    cv2.rectangle(frame, (paint_x, diag_h), (paint_x + square_width, square_width + diag_h), color, -1)
+    diag_h = diag_h - 3
     video.write(frame)
 video.release()
 '''

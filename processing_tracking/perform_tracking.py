@@ -11,7 +11,7 @@ def perform_tracking():
     if system_mode != "debug ":
         input_video = input("Please enter a video path:\n")
     else:
-        input_video = "C:\\Users\\Z41\\PycharmProjects\\tracking_project\\videos\\conceal5.avi"
+        input_video = "C:\\Users\\Z41\\PycharmProjects\\tracking_project\\videos\\conceal3.avi"
     try:
         cap = cv2.VideoCapture(input_video)
         select_target_flag = False
@@ -30,7 +30,7 @@ def perform_tracking():
         fps = int(cap.get(cv2.CAP_PROP_FPS))
 
         # Defining the codec and creating VideoWriter object. The output is stored in 'Vid1_Binary.avi' file.
-        out1 = cv2.VideoWriter('Corr_Tracker_conceal5.avi', cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), fps,
+        out1 = cv2.VideoWriter('Corr_Tracker_conceal3.avi', cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), fps,
                                (frame_width, frame_height))
         red = [0, 0, 255]
         # Read until video is completed
@@ -46,9 +46,8 @@ def perform_tracking():
                     # x, y, target = create_target(gray)
                     select_target_flag = True
                     kalman = kalman_filter((x, y), fps)
-
-                window_w = target.shape[0] * 6
-                window_h = target.shape[1] * 6
+                    window_w = target.shape[0] * 6
+                    window_h = target.shape[1] * 6
                 # creating the search window for the current frame
                 top_left_corner_x, top_left_corner_y, search_window = create_window(x, y, window_w, window_h, gray)
                 measurment_x, measurment_y = get_correlation_prediction(x, y, search_window, target, top_left_corner_x,

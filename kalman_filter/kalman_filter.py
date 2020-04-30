@@ -26,7 +26,6 @@ class kalman_filter:
         # the measurement noise covariance matrix
         self.measurement_noise = init_measurement_noise()
 
-
     def projects(self):
         self.current_state = dot(self.state_transition, self.current_state)
         self.covariance = dot(self.state_transition, dot(self.covariance, self.state_transition.T))
@@ -45,4 +44,6 @@ class kalman_filter:
     def get_prediction(self, measurement):
         self.projects()
         self.update(measurement)
+        print(self.current_state[2], self.current_state[3])
+        print(self.process_noise_covariance)
         return dot(self.measuring_matrix, self.current_state)

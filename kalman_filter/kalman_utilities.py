@@ -27,7 +27,7 @@ def init_measuring_matrix():
 
 
 def init_covariance_matrix():
-    return np.array([[10000, 0, 0, 0], [0, 10000, 0, 0], [0, 0, 10000, 0], [0, 0, 0, 10000]])
+    return np.array([[100000, 0, 0, 0], [0, 10000, 0, 0], [0, 0, 100000, 0], [0, 0, 0, 10000]])
 
 
 def init_process_noise_covariance():

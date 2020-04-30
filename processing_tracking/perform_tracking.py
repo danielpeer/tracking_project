@@ -40,17 +40,17 @@ def perform_tracking():
             if ret:
                 # converting to grayscale in order to calculate correlation
                 gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
                 if not select_target_flag:  # creating the target only once
-                    x, y, target = create_target(gray)
+                    x, y, target = create_object_target(gray)
                     select_target_flag = True
+                    kalman = kalman_filter((x, y), fps)
 
+                window_w = target.shape[0] * 6
+                window_h = target.shape[1] * 6
                 # creating the search window for the current frame
                 top_left_corner_x, top_left_corner_y, search_window = create_window(x, y, window_w, window_h, gray)
-                a = kalman_filter((x, y),fps)
-                measurment_x, measurment_y = get_center_of_mass_prediction(x, y, search_window, top_left_corner_x,
-                                                               top_left_corner_y)
-                measurment = a.get_prediction(np.array([[measurment_x],[measurment_y]]))
+                measurment_x, measurment_y = get_correlation_prediction(x, y, search_window, target, top_left_corner_x, top_left_corner_y)
+                measurment = kalman.get_prediction(np.array([[measurment_x], [measurment_y]]))
                 x, y = int(measurment[0]),int(measurment[1])
                 cv2.circle(frame, (y, x), 3, red, -1)
 

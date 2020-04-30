@@ -2,6 +2,7 @@ from numpy import dot
 from numpy.linalg import inv
 from kalman_filter.kalman_utilities import *
 
+
 class kalman_filter:
     def __init__(self, initial_location, frames_per_second):
 
@@ -25,19 +26,22 @@ class kalman_filter:
         # the measurement noise covariance matrix
         self.measurement_noise = init_measurement_noise()
 
+
     def projects(self):
         self.current_state = dot(self.state_transition, self.current_state)
         self.covariance = dot(self.state_transition, dot(self.covariance, self.state_transition.T))
 
     def update(self, measurement):
         Ck = dot(self.measuring_matrix, self.current_state)
+        if np.array_equal(measurement, np.array([[-1], [-1]])):
+            self.process_noise_covariance = init_R_maximum()
         IS = dot(self.measuring_matrix, dot(self.covariance, self.measuring_matrix.T)) + self.process_noise_covariance
         K = dot(self.covariance, dot(self.measuring_matrix.T, inv(IS)))
         self.current_state = self.current_state + dot(K, (measurement - Ck))
         self.covariance = dot(np.identity(4) - dot(K, self.measuring_matrix), self.covariance)
 
     def get_prediction(self, measurement):
-        self.update(measurement)
         self.projects()
-        print(self.current_state)
+        self.update(measurement)
+        print(self.current_state[2], self.current_state[3])
         return dot(self.measuring_matrix, self.current_state)

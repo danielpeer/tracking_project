@@ -1,7 +1,6 @@
 import cv2
 import math
-
-############################################################### Search Window #####################################################
+import numpy as np
 
 
 window_w = 60
@@ -9,6 +8,7 @@ window_h = 60
 target_w = 5
 target_h = 5
 
+############################################################### Search Window #####################################################
 
 def truncate(n, decimals=0):
     if n == 0:
@@ -77,6 +77,20 @@ def get_square_center(first_frame):
 
 ################################################ target position ##################################################################
 
+
+def create_object_target(gray):
+    """
+       creating the target matrix for the correlation algorithm
+       gray - the frame in grayscale
+       returns -  x,y - the coordinates of the target which was chosen by the user and the target matrix itself
+       """
+    x, y = get_square_center(gray)
+    gray_width, gray_height = gray.shape
+    (top_x, lowest_x, left_y, right_y) = get_white_square_dims(x, y, gray)
+    target = gray[top_x: lowest_x + 1,
+             left_y: right_y + 1]
+    return x, y, target
+
 def create_target(gray):
     """
     creating the target matrix for the correlation algorithm
@@ -100,3 +114,24 @@ def create_target(gray):
     return x, y, target
 
 ##########################################################################################################
+
+
+def get_white_square_dims(x,y,image):
+    current_x = x
+    while current_x >= 0 and image[current_x, y] != 0:
+        current_x -= 1
+    top_x = current_x + 1
+    current_x = x
+    while current_x <= 1200 and image[current_x, y] != 0:
+        current_x += 1
+    lowest_x = current_x - 1
+    current_y = y
+    while current_y <= 1200 and image[x, current_y] != 0:
+        current_y += 1
+    right_y = current_y - 1
+    current_y = y
+    while current_y >= 0 and image[x,  current_y] != 0:
+        current_y -= 1
+    left_y = current_y +1
+    return (top_x,lowest_x,left_y, right_y)
+

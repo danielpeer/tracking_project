@@ -138,3 +138,12 @@ def get_white_square_dims(x, y, image):
         current_y -= 1
     left_y = current_y + 1
     return (top_x, lowest_x, left_y, right_y)
+
+############################################################################################################
+
+def add_gaussian_noise(image):
+    mean = 0.0  # some constant
+    std = 1.0  # some constant (standard deviation)
+    noisy_img = image + np.random.normal(mean, std, image.shape)
+    noisy_img_clipped = np.clip(noisy_img, 0, 255)
+    return noisy_img_clipped

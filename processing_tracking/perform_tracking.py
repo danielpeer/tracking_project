@@ -3,6 +3,7 @@ from processing_tracking.perform_tracking_utilities import *
 from correlation_filter.corr_tracker import *
 from center_of_mass_filter.calculate_center_of_mass import *
 from kalman_filter.kalman_filter import *
+from videos import *
 
 system_mode = "debug "
 
@@ -11,7 +12,7 @@ def perform_tracking():
     if system_mode != "debug ":
         input_video = input("Please enter a video path:\n")
     else:
-        input_video = "C:\\Users\\Z41\\PycharmProjects\\tracking_project\\videos\\conceal5.avi"
+        input_video = ".\\..\\videos\\conceal5.avi"
     try:
         cap = cv2.VideoCapture(input_video)
         select_target_flag = False
@@ -49,11 +50,18 @@ def perform_tracking():
                     window_w = target.shape[0] * 6
                     window_h = target.shape[1] * 6
                 # creating the search window for the current frame
-                top_left_corner_x, top_left_corner_y, search_window = create_window(x, y, window_w, window_h, gray)
-                measurment_x, measurment_y = get_correlation_prediction(x, y, search_window, target, top_left_corner_x,
+                else:
+                    gray = add_gaussian_noise(gray)
+                top_left_corner_x, top_left_corner_y, search_window = create_window(x, y, window_w, window_h, add_gaussian_noise(gray))
+                correlation_prediction_x, correlation_prediction_y = get_correlation_prediction(x, y, search_window, target, top_left_corner_x,
                                                                         top_left_corner_y)
-                measurment = kalman.get_prediction(np.array([[measurment_x], [measurment_y]]))
-                x, y = int(measurment[0]), int(measurment[1])
+                center_of_mass_prediction_x,center_of_mass_prediction_y = get_center_of_mass_prediction(x, y, search_window, top_left_corner_x, top_left_corner_y)
+                kalman.update_process_noise_covariance((correlation_prediction_x, correlation_prediction_y),(center_of_mass_prediction_x,center_of_mass_prediction_y))
+                x_prediction = 0.4 * correlation_prediction_x + 0.6 * center_of_mass_prediction_x
+                y_prediction = 0.4 * correlation_prediction_y + 0.6 * center_of_mass_prediction_y
+
+                posterior_prediction = kalman.get_prediction(np.array([[x_prediction], [y_prediction]]))
+                x, y = int(posterior_prediction[0]), int(posterior_prediction[1])
                 cv2.circle(frame, (y, x), 3, red, -1)
                 # Display the resulting frame
                 cv2.imshow('Frame', frame)

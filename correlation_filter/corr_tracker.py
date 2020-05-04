@@ -6,6 +6,9 @@ from processing_tracking.perform_tracking_utilities import *
 
 OBJECT_IS_HIDDEN = 1
 OBJECT_IS_NOT_HIDDEN = 0
+OBJECT_CHANGED_VELOCITY = 1
+OBJECT_NOT_HANGED_VELOCITY = 0
+
 
 def normalizeArray(window):
     """
@@ -128,7 +131,7 @@ def correlation1(window, target):
 
 
 def detect_if_object_is_hidden(corr, target_shape):
-    THRESHOLD = np.amax(corr) * 0.83
+    THRESHOLD = np.amax(corr) * 0.8
     object_pos = np.unravel_index(np.argmax(corr), corr.shape)
     matched_indices = np.argwhere(corr >= THRESHOLD)
     if len(matched_indices) > 1:
@@ -142,13 +145,21 @@ def detect_if_object_is_hidden(corr, target_shape):
 
 def get_correlation_prediction(x, y, search_window, target, top_left_corner_x, top_left_corner_y):
     corr = correlation2(search_window, target)
-    if detect_if_object_is_hidden(corr, target.shape) == OBJECT_IS_HIDDEN:
-        return (-1, -1)
+  #  if detect_if_object_is_hidden(corr, target.shape) == OBJECT_IS_HIDDEN:
+#      return (-1, -1)
     x_max, y_max = np.unravel_index(np.argmax(corr), corr.shape)   # find the relative coordinates of highest correlation
     x_max += math.floor(target.shape[0] / 2)
     y_max += math.floor(target.shape[1] / 2)
 
     return int(top_left_corner_x + x_max), int(top_left_corner_y + y_max)
 
+
+def detect_changes_in_velocity(prior_measurements, corr):
+    predicted_object_pos = np.amax(corr)
+    prior_measurements_corr = corr[int(prior_measurements[0]),int(prior_measurements[1])];
+    THRESHOLD = predicted_object_pos * 0.9
+    if (prior_measurements_corr < THRESHOLD ):
+        return OBJECT_CHANGED_VELOCITY
+    return OBJECT_NOT_HANGED_VELOCITY
 
 

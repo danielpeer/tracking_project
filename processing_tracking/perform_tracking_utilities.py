@@ -141,6 +141,39 @@ def get_white_square_dims(x, y, image):
 
 ############################################################################################################
 
+
+def get_integrated_prediction(center_of_mass_predictions, correlation_predictions, prior_predictions):
+
+    # the result of center of mass and result of correlation are quiet far
+    if np.linalg.norm(center_of_mass_predictions - correlation_predictions) > 5:
+        # the prediction of center of mass is closer to the kalman prior prediction
+        if np.linalg.norm(center_of_mass_predictions - prior_predictions) < np.linalg.norm(correlation_predictions -
+                                                                                           prior_predictions):
+            #the prediction of center of mass is too far from the kalman prediction
+            if np.linalg.norm(center_of_mass_predictions - prior_predictions) > 7:
+                #because both (center of mass &corr) didn't predict well, we take kalman prediction
+                prediction = prior_predictions
+            else:
+                prediction = center_of_mass_predictions
+
+        else:
+            if np.linalg.norm(correlation_predictions - prior_predictions) > 7:
+                prediction = prior_predictions
+            else:
+                prediction = correlation_predictions
+    else:
+        # the result of center of mass and result of correlation are quiet close, we calculate the average
+        prediction = 0.5 * center_of_mass_predictions + 0.5 * correlation_predictions
+    return prediction
+
+
+
+
+
+
+
+
+
 def add_gaussian_noise(image):
     mean = 0.0  # some constant
     std = 1.0  # some constant (standard deviation)

@@ -32,13 +32,11 @@ class kalman_filter:
 
     def update(self, measurement):
         Ck = dot(self.measuring_matrix, self.current_state)
-        # if np.array_equal(measurement, np.array([[-1], [-1]])):
-         #   self.process_noise_covariance = init_R_maximum()
         IS = dot(self.measuring_matrix, dot(self.covariance, self.measuring_matrix.T)) + self.process_noise_covariance
         K = dot(self.covariance, dot(self.measuring_matrix.T, inv(IS)))
         a = measurement - Ck
         self.current_state = self.current_state + dot(K, (measurement - Ck))
-        self.covariance = dot(np.identity(4) - dot(K, self.measuring_matrix), self.covariance) + self.measurement_noise
+        self.covariance = dot(np.identity(4) - dot(K, self.measuring_matrix), self.covariance)
 
     def get_prior_estimate(self):
         self.projects()
@@ -48,17 +46,14 @@ class kalman_filter:
         self.update(measurement)
         return dot(self.measuring_matrix, self.current_state)
 
-    def update_process_noise_covariance(self, center_of_mass_prediction, correlation_prediction):
-        x_deviation = abs(center_of_mass_prediction[0]-correlation_prediction[0])
-        y_deviation = abs(center_of_mass_prediction[1]-correlation_prediction[1])
-        if(x_deviation < 5  and y_deviation < 5):
-            self.process_noise_covariance = init_R_minimum()
-        else :
+    def update_process_noise_covariance(self, r_type):
+        if r_type == 1:
+            # object is hidden
             self.process_noise_covariance = init_R_maximum()
-        #self.process_noise_covariance = np.array([[x_deviation, 0], [0, y_deviation]])
-
+        else:
+            # object is not hidden
+            self.process_noise_covariance = init_process_noise_covariance()
 
     def get_prediction(self, measurement):
-        self.projects()
         self.update(measurement)
         return dot(self.measuring_matrix, self.current_state)

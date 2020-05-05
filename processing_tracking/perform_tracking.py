@@ -12,7 +12,7 @@ def perform_tracking():
     if system_mode != "debug ":
         input_video = input("Please enter a video path:\n")
     else:
-        input_video = ".\\..\\videos\\conceal5.avi"
+        input_video = ".\\..\\videos\\conceal4.avi"
     try:
         cap = cv2.VideoCapture(input_video)
         select_target_flag = False
@@ -35,6 +35,7 @@ def perform_tracking():
                                (frame_width, frame_height))
         red = [0, 0, 255]
         # Read until video is completed
+        retries = 0
         while cap.isOpened():
             # Capture frame-by-frame
             ret, frame = cap.read()
@@ -50,17 +51,26 @@ def perform_tracking():
                     window_w = target.shape[0] * 6
                     window_h = target.shape[1] * 6
                 # creating the search window for the current frame
-                else:
-                    gray = add_gaussian_noise(gray)
-                top_left_corner_x, top_left_corner_y, search_window = create_window(x, y, window_w, window_h, add_gaussian_noise(gray))
-                correlation_prediction_x, correlation_prediction_y = get_correlation_prediction(x, y, search_window, target, top_left_corner_x,
-                                                                        top_left_corner_y)
-                center_of_mass_prediction_x,center_of_mass_prediction_y = get_center_of_mass_prediction(x, y, search_window, top_left_corner_x, top_left_corner_y)
-                kalman.update_process_noise_covariance((correlation_prediction_x, correlation_prediction_y),(center_of_mass_prediction_x,center_of_mass_prediction_y))
-                x_prediction = 0.4 * correlation_prediction_x + 0.6 * center_of_mass_prediction_x
-                y_prediction = 0.4 * correlation_prediction_y + 0.6 * center_of_mass_prediction_y
+                top_left_corner_x, top_left_corner_y, search_window = create_window(x, y, window_w, window_h, gray)
+                prior_prediction = kalman.get_prior_estimate()
+                search_window = add_gaussian_noise(search_window)
+                correlation_predictions = get_correlation_prediction(x, y, search_window, target, top_left_corner_x,
+                                                                     top_left_corner_y)
 
-                posterior_prediction = kalman.get_prediction(np.array([[x_prediction], [y_prediction]]))
+                if not(np.array_equal(correlation_predictions, np.array([[-1], [-1]]))):
+                    #object is not hidden
+                    kalman.update_process_noise_covariance(0)
+                    center_of_mass_predictions = get_center_of_mass_prediction(x, y, search_window, top_left_corner_x,
+                                                                               top_left_corner_y)
+                    filter_predictions = get_integrated_prediction(center_of_mass_predictions, correlation_predictions,
+                                                                   prior_prediction)
+                    posterior_prediction = kalman.get_prediction(filter_predictions)
+
+                else:
+                    #object is hidden
+                    kalman.update_process_noise_covariance(1)
+                    posterior_prediction = kalman.get_prediction(prior_prediction)
+
                 x, y = int(posterior_prediction[0]), int(posterior_prediction[1])
                 cv2.circle(frame, (y, x), 3, red, -1)
                 # Display the resulting frame

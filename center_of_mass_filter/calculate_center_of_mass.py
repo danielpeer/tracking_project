@@ -31,4 +31,4 @@ def get_center_of_mass_prediction(x, y, search_window, top_left_corner_x, top_le
                 y = 1200 - window_h / 2 + cy
             else:
                 y = top_left_corner_y + cy
-            return int(x), int(y)
+            return np.array([[int(x)], [int(y)]])

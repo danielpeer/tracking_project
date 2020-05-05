@@ -4,7 +4,7 @@ import math
 
 global delta_t
 global G
-sigma_a = 10
+sigma_a = 0
 
 
 def init_global_variables(frames_per_seconds):
@@ -27,7 +27,7 @@ def init_measuring_matrix():
 
 
 def init_covariance_matrix():
-    return np.array([[1000, 0, 0, 0], [0, 1000, 0, 0], [0, 0, 1000, 0], [0, 0, 0, 1000]])
+    return np.array([[1000000, 0, 0, 0], [0, 1000000, 0, 0], [0, 0, 1000000, 0], [0, 0, 0, 1000000]])
 
 
 def init_process_noise_covariance():
@@ -39,6 +39,3 @@ def init_measurement_noise():
 
 def init_R_maximum():
     return np.array([[1000000, 0], [0, 1000000]])
-
-def init_R_minimum():
-    return np.array([[0.000001, 0], [0, 0.000001]])

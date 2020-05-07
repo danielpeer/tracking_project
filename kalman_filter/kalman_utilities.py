@@ -34,7 +34,7 @@ def init_process_noise_covariance():
     return np.array([[1, 0], [0, 1]])
 
 def init_measurement_noise():
-    return G * G.T * sigma_a**2
+    return np.array([[1000000, 0, 0, 0], [0, 1000000, 0, 0], [0, 0, 1000000, 0], [0, 0, 0, 1000000]])
 
 
 def init_R_maximum():

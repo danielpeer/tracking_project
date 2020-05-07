@@ -12,7 +12,7 @@ def perform_tracking():
     if system_mode != "debug ":
         input_video = input("Please enter a video path:\n")
     else:
-        input_video = ".\\..\\videos\\conceal4.avi"
+        input_video = ".\\..\\videos\\atrium.avi"
     try:
         cap = cv2.VideoCapture(input_video)
         select_target_flag = False
@@ -31,7 +31,7 @@ def perform_tracking():
         fps = int(cap.get(cv2.CAP_PROP_FPS))
 
         # Defining the codec and creating VideoWriter object. The output is stored in 'Vid1_Binary.avi' file.
-        out1 = cv2.VideoWriter('Corr_Tracker_conceal5.avi', cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), fps,
+        out1 = cv2.VideoWriter('Corr_Tracker_atrium.avi', cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), fps,
                                (frame_width, frame_height))
         red = [0, 0, 255]
         # Read until video is completed
@@ -48,8 +48,8 @@ def perform_tracking():
                     # x, y, target = create_target(gray)
                     select_target_flag = True
                     kalman = kalman_filter((x, y), fps)
-                    window_w = target.shape[0] * 6
-                    window_h = target.shape[1] * 6
+                    window_w = target.shape[0] * 3
+                    window_h = target.shape[1] * 3
                 # creating the search window for the current frame
                 top_left_corner_x, top_left_corner_y, search_window = create_window(x, y, window_w, window_h, gray)
                 prior_prediction = kalman.get_prior_estimate()
@@ -57,8 +57,8 @@ def perform_tracking():
                 correlation_predictions = get_correlation_prediction(x, y, search_window, target, top_left_corner_x,
                                                                      top_left_corner_y)
 
-                if not(np.array_equal(correlation_predictions, np.array([[-1], [-1]]))):
-                    #object is not hidden
+                if not (np.array_equal(correlation_predictions, np.array([[-1], [-1]]))):
+                    # object is not hidden
                     kalman.update_process_noise_covariance(0)
                     center_of_mass_predictions = get_center_of_mass_prediction(x, y, search_window, top_left_corner_x,
                                                                                top_left_corner_y)
@@ -67,12 +67,15 @@ def perform_tracking():
                     posterior_prediction = kalman.get_prediction(filter_predictions)
 
                 else:
-                    #object is hidden
+                    # object is hidden
                     kalman.update_process_noise_covariance(1)
                     posterior_prediction = kalman.get_prediction(prior_prediction)
 
                 x, y = int(posterior_prediction[0]), int(posterior_prediction[1])
-                cv2.circle(frame, (y, x), 3, red, -1)
+
+                cv2.rectangle(frame, (y - int(target.shape[1]), x - int(target.shape[0])),
+                              (y + int(target.shape[1]), x + int(target.shape[0])), red, 1)
+
                 # Display the resulting frame
                 cv2.imshow('Frame', frame)
 

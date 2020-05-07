@@ -73,7 +73,6 @@ def get_square_center(first_frame):
         # if the 'c' key is pressed, break from the loop
         if key == ord("c"):
             break
-    print(refPt)
     return refPt
 
 
@@ -143,7 +142,7 @@ def get_white_square_dims(x, y, image):
 
 
 def get_integrated_prediction(center_of_mass_predictions, correlation_predictions, prior_predictions):
-
+    '''
     # the result of center of mass and result of correlation are quiet far
     if np.linalg.norm(center_of_mass_predictions - correlation_predictions) > 5:
         # the prediction of center of mass is closer to the kalman prior prediction
@@ -164,6 +163,8 @@ def get_integrated_prediction(center_of_mass_predictions, correlation_prediction
     else:
         # the result of center of mass and result of correlation are quiet close, we calculate the average
         prediction = 0.5 * center_of_mass_predictions + 0.5 * correlation_predictions
+   '''
+    prediction = 0 * center_of_mass_predictions + 1 * correlation_predictions
     return prediction
 
 

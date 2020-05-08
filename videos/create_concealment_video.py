@@ -15,12 +15,12 @@ step_size = 15
 paint_h = int((height / 2) - 15)
 square_width = 30
 fourcc = VideoWriter_fourcc(*'MP42')
-
+'''
 # video #1 - one concealment
 video = VideoWriter('conceal1.avi', fourcc, float(FPS), (width, height))
 for paint_x in range(0, width - square_width, 6):
     frame = np.zeros((height, width, 3), np.uint8)
-    concealment = cv2.rectangle(frame, (400, 0), (600, 1200), color, -1)
+    concealment = cv2.rectangle(frame, (150, 0), (350, 1200), color, -1)
     frame = frame + concealment
     cv2.rectangle(frame, (paint_x, paint_h), (paint_x + square_width, square_width + paint_h), color, -1)
     video.write(frame)
@@ -62,7 +62,7 @@ for paint_x in range(0, width - square_width, 6):
     diag_h = diag_h - 3
     video.write(frame)
 video.release()
-
+'''
 # video #5 - sine wave run
 video = VideoWriter('conceal5.avi', fourcc, float(FPS), (width, height))
 i = 0
@@ -81,20 +81,4 @@ for paint_x in range(0, width - square_width, 6):
     video.write(frame)
 video.release()
 
-'''
-video = VideoWriter('conceal.avi', fourcc, float(FPS), (width, height))
-for paint_x in range(0, width - square_width, 6):
-    frame = np.zeros((height, width, 3), np.uint8)
-    concealment = cv2.rectangle(frame, (500, 0), (700, 1200), color, -1)
-    frame = frame + concealment
-    cv2.rectangle(frame, (paint_x, paint_h), (paint_x + square_width, square_width + paint_h), color, -1)
-    video.write(frame)
-video.release()
-video = VideoWriter('conceal.avi', fourcc, float(FPS), (width, height))
-for paint_x in range(0, width - square_width, 6):
-    frame = np.zeros((height, width, 3), np.uint8)
-    concealment = cv2.rectangle(frame, (500, 0), (700, 1200), color, -1)
-    frame = frame + concealment
-    cv2.rectangle(frame, (paint_x, paint_h), (paint_x + square_width, square_width + paint_h), color, -1)
-    video.write(frame)
-video.release()'''
+

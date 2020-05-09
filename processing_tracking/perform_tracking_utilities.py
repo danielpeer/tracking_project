@@ -85,12 +85,12 @@ def create_object_target(gray):
        gray - the frame in grayscale
        returns -  x,y - the coordinates of the target which was chosen by the user and the target matrix itself
        """
-    x, y = get_square_center(gray)
+    center_x, center_y = get_square_center(gray)
     gray_width, gray_height = gray.shape
-    (top_x, lowest_x, left_y, right_y) = get_white_square_dims(x, y, gray)
-    target = gray[top_x: lowest_x + 1,
-             left_y: right_y + 1]
-    return x, y, target
+    x, y, w, h = get_object_dimensions(center_x, center_y, gray)[0]
+    target_area = get_object_dimensions(center_x, center_y, gray)[1]
+    target = gray[y:y + h, x:x + w]
+    return center_x, center_y, target, target_area
 
 
 def create_target(gray):
@@ -119,65 +119,27 @@ def create_target(gray):
 ##########################################################################################################
 
 
-def get_white_square_dims(x, y, image):
-    current_x = x
-    while current_x >= 0 and image[current_x, y] != 0:
-        current_x -= 1
-    top_x = current_x + 1
-    current_x = x
-    while current_x <= 1200 and image[current_x, y] != 0:
-        current_x += 1
-    lowest_x = current_x - 1
-    current_y = y
-    while current_y <= 1200 and image[x, current_y] != 0:
-        current_y += 1
-    right_y = current_y - 1
-    current_y = y
-    while current_y >= 0 and image[x, current_y] != 0:
-        current_y -= 1
-    left_y = current_y + 1
-    return (top_x, lowest_x, left_y, right_y)
+def get_object_dimensions(x, y, gray):
+    object_contour = None
+    ret, thresh = cv2.threshold(gray, 127, 255, 0)
+    contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    for contour in contours:
+        if cv2.pointPolygonTest(contour, (y, x), False) >= 0:
+            object_contour = contour
+            break
+    contour_dim = cv2.boundingRect(object_contour)
+    contour_area = cv2.contourArea(object_contour)
+    return contour_dim, contour_area
 
 ############################################################################################################
 
-
-def get_integrated_prediction(center_of_mass_predictions, correlation_predictions, prior_predictions):
-    '''
-    # the result of center of mass and result of correlation are quiet far
-    if np.linalg.norm(center_of_mass_predictions - correlation_predictions) > 5:
-        # the prediction of center of mass is closer to the kalman prior prediction
-        if np.linalg.norm(center_of_mass_predictions - prior_predictions) < np.linalg.norm(correlation_predictions -
-                                                                                           prior_predictions):
-            #the prediction of center of mass is too far from the kalman prediction
-            if np.linalg.norm(center_of_mass_predictions - prior_predictions) > 7:
-                #because both (center of mass &corr) didn't predict well, we take kalman prediction
-                prediction = prior_predictions
-            else:
-                prediction = center_of_mass_predictions
-
-        else:
-            if np.linalg.norm(correlation_predictions - prior_predictions) > 7:
-                prediction = prior_predictions
-            else:
-                prediction = correlation_predictions
-    else:
-        # the result of center of mass and result of correlation are quiet close, we calculate the average
-        prediction = 0.5 * center_of_mass_predictions + 0.5 * correlation_predictions
-   '''
-    prediction = 0 * center_of_mass_predictions + 1 * correlation_predictions
-    return prediction
-
-
-
-
-
-
-
-
-
-def add_gaussian_noise(image):
+def add_gaussian_noise(search_window_info):
+    image = search_window_info.search_window
     mean = 0.0  # some constant
     std = 1.0  # some constant (standard deviation)
     noisy_img = image + np.random.normal(mean, std, image.shape)
     noisy_img_clipped = np.clip(noisy_img, 0, 255)
-    return noisy_img_clipped
+    search_window_info.search_window = noisy_img_clipped
+
+########################################################################################################
+

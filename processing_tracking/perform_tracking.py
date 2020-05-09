@@ -3,16 +3,21 @@ from processing_tracking.perform_tracking_utilities import *
 from correlation_filter.corr_tracker import *
 from center_of_mass_filter.calculate_center_of_mass import *
 from kalman_filter.kalman_filter import *
+from processing_tracking.state_machine import *
+from processing_tracking.target import *
+from processing_tracking.SearchWindow import *
 from videos import *
 
+
 system_mode = "debug "
+should_add_gaussian_noise = False
 
 
 def perform_tracking():
     if system_mode != "debug ":
         input_video = input("Please enter a video path:\n")
     else:
-        input_video = ".\\..\\videos\\atrium.avi"
+        input_video = ".\\..\\videos\\conceal1.avi"
     try:
         cap = cv2.VideoCapture(input_video)
         select_target_flag = False
@@ -44,38 +49,36 @@ def perform_tracking():
                 # converting to grayscale in order to calculate correlation
                 gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                 if not select_target_flag:  # creating the target only once
-                    x, y, target = create_object_target(gray)
-                    # x, y, target = create_target(gray)
+                    target_info = Target(gray)
+                    search_window_info = SearchWindow(target_info)
+                    kalman = KalmanFilter(target_info, fps)
+                    state_holder = StateMachine(target_info)
                     select_target_flag = True
-                    kalman = kalman_filter((x, y), fps)
-                    window_w = target.shape[0] * 3
-                    window_h = target.shape[1] * 3
                 # creating the search window for the current frame
-                top_left_corner_x, top_left_corner_y, search_window = create_window(x, y, window_w, window_h, gray)
-                prior_prediction = kalman.get_prior_estimate()
-                search_window = add_gaussian_noise(search_window)
-                correlation_predictions = get_correlation_prediction(x, y, search_window, target, top_left_corner_x,
-                                                                     top_left_corner_y)
+                search_window_info.update_search_window(target_info, gray)
 
-                if not (np.array_equal(correlation_predictions, np.array([[-1], [-1]]))):
-                    # object is not hidden
-                    kalman.update_process_noise_covariance(0)
-                    center_of_mass_predictions = get_center_of_mass_prediction(x, y, search_window, top_left_corner_x,
-                                                                               top_left_corner_y)
-                    filter_predictions = get_integrated_prediction(center_of_mass_predictions, correlation_predictions,
-                                                                   prior_prediction)
-                    posterior_prediction = kalman.get_prediction(filter_predictions)
+                if should_add_gaussian_noise:
+                    add_gaussian_noise(search_window_info)
 
+                correlation_prediction = get_correlation_prediction(target_info, search_window_info)
+                center_of_mass_prediction = get_center_of_mass_prediction(search_window_info)
+                current_state = state_holder.get_current_state(search_window_info, center_of_mass_prediction,
+                                                               correlation_prediction)
+                prediction = get_integrated_prediction(correlation_prediction, center_of_mass_prediction, state_holder)
+
+                if current_state == OVERLAP or current_state == CONCEALMENT:
+                    kalman.base_kalman_prior_prediction()
                 else:
-                    # object is hidden
-                    kalman.update_process_noise_covariance(1)
-                    posterior_prediction = kalman.get_prediction(prior_prediction)
+                    kalman.base_measurement()
 
-                x, y = int(posterior_prediction[0]), int(posterior_prediction[1])
 
-                cv2.rectangle(frame, (y - int(target.shape[1]), x - int(target.shape[0])),
-                              (y + int(target.shape[1]), x + int(target.shape[0])), red, 1)
+                final_prediction = kalman.get_prediction(prediction)
+                x, y = final_prediction[0][0], final_prediction[1][0]
+                cv2.rectangle(frame, (y - target_info.target_h, x - target_info.target_w),
+                              (y + target_info.target_h, x + target_info.target_w), red, 1)
 
+                target_info.update_position(x, y)
+                state_holder.update_previous_pos((x, y))
                 # Display the resulting frame
                 cv2.imshow('Frame', frame)
 
@@ -97,5 +100,16 @@ def perform_tracking():
         print(IOError)
         print("File not accessible")
 
+
+def get_integrated_prediction(corr_prediction, center_of_mass_prediction, state_machine):
+    if state_machine.use_center_of_mass_prediction and state_machine.use_correlation_prediction:
+        center_of_mass_prediction = 0.5 * np.array([[center_of_mass_prediction[0]], [center_of_mass_prediction[1]]])
+        corr_prediction = 0.5 * np.array([[corr_prediction[0]], [corr_prediction[1]]])
+        prediction = center_of_mass_prediction + corr_prediction
+    elif state_machine.use_correlation_prediction:
+        prediction = np.array([[corr_prediction[0]], [corr_prediction[1]]])
+    else:
+        prediction = np.array([[center_of_mass_prediction[0]], [center_of_mass_prediction[1]]])
+    return prediction
 
 perform_tracking()

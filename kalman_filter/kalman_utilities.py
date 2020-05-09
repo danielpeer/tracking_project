@@ -30,12 +30,17 @@ def init_covariance_matrix():
     return np.array([[1000000, 0, 0, 0], [0, 1000000, 0, 0], [0, 0, 1000000, 0], [0, 0, 0, 1000000]])
 
 
-def init_process_noise_covariance():
+def init_minimum_measurement_noise():
+    return np.array([[100, 0, 0, 0], [0, 100, 0, 0], [0, 0, 100, 0], [0, 0, 0, 100]])
+
+
+def init_maximum_measurement_noise():
+    return np.array([[1000, 0, 0, 0], [0, 1000, 0, 0], [0, 0, 1000, 0], [0, 0, 0, 1000]])
+
+
+def init_maximum_process_noise_covariance():
+    return np.array([[100000000, 0], [0, 100000000]])
+
+
+def init_minimum_process_noise_covariance():
     return np.array([[1, 0], [0, 1]])
-
-def init_measurement_noise():
-    return np.array([[1000000, 0, 0, 0], [0, 1000000, 0, 0], [0, 0, 1000000, 0], [0, 0, 0, 1000000]])
-
-
-def init_R_maximum():
-    return np.array([[1000000, 0], [0, 1000000]])

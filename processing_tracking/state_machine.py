@@ -29,9 +29,12 @@ class StateMachine:
         ret, thresh = cv2.threshold(search_window, 127, 255, 0)
         contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         for contour in contours:
-            if cv2.pointPolygonTest(contour, correlation_prediction_window, False) >= 0:
+            M = cv2.moments(contour)
+            cX = int(M["m10"] / M["m00"])
+            cY = int(M["m01"] / M["m00"])
+            if (cv2.pointPolygonTest(contour, correlation_prediction_window, False) >= 0) or ((correlation_prediction_window[1] - cX >=15) and (correlation_prediction_window[0] - cY >=15)):
                 object_contour = contour
-                object_current_pos = correlation_prediction
+                object_current_pos = (correlation_prediction[1], correlation_prediction[0])
                 self.use_correlation_prediction = True
                 break
         if object_contour is not None:
@@ -41,9 +44,12 @@ class StateMachine:
                 self.use_center_of_mass_prediction = False
         else:
             for contour in contours:
-                if cv2.pointPolygonTest(contour, center_of_mass_window, False) >= 0:
+                M = cv2.moments(contour)
+                cX = int(M["m10"] / M["m00"])
+                cY = int(M["m01"] / M["m00"])
+                if (cv2.pointPolygonTest(contour, center_of_mass_window, False) >= 0) or ((center_of_mass_window[1] - cX >=15) and (center_of_mass_window[0] - cY >=15)):
                     object_contour = contour
-                    object_current_pos = center_of_mass
+                    object_current_pos = (center_of_mass[1], center_of_mass[0])
                     self.use_center_of_mass_prediction = True
                     break
             self.use_correlation_prediction = False

@@ -1,5 +1,6 @@
 import math
-
+import cv2
+import numpy as np
 
 class SearchWindow:
     def __init__(self, target):
@@ -9,7 +10,7 @@ class SearchWindow:
         self.window_w = target.target_w * 4
         self.window_h = target.target_h * 4
 
-    def update_search_window(self, target_info, gray):
+    def update_search_window(self, target_info, mask):
         """
             creating the search window for the correlation algorithm
             x,y - the coordinates of the target which was chosen by the user
@@ -17,12 +18,12 @@ class SearchWindow:
             gray - the frame in grayscale
             returns - the top left corner coordinates of the search window and the search windows itself
          """
-        x, y = target_info.current_pos
+        y, x = target_info.current_pos
         x_window = x
         y_window = y
         window_w = self.window_w
         window_h = self.window_h
-        gray_width, gray_height = gray.shape
+        gray_width, gray_height = mask.shape
         top_left_corner_x = x - (window_w / 2)
         top_left_corner_y = y - (window_h / 2)
         if x - (window_w / 2) < 0:
@@ -37,7 +38,7 @@ class SearchWindow:
         if y + (window_h / 2) > gray_height:
             y_window = gray_height - (window_h / 2)
             top_left_corner_y = gray_height - window_h
-        search_window = gray[int(x_window - math.floor(window_w / 2)): int(x_window + math.floor(window_w / 2)),
+        search_window = mask[int(x_window - math.floor(window_w / 2)): int(x_window + math.floor(window_w / 2)),
                     int(y_window - math.floor(window_h / 2)): int(y_window + math.floor(window_h / 2))]
         self.top_left_corner_x = top_left_corner_x
         self.top_left_corner_y = top_left_corner_y

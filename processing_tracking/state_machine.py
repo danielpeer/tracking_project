@@ -7,6 +7,7 @@ CONCEALMENT = 2
 EXIT_OVERLAP = 3
 MAXIMUM_DISTANCE = 20
 
+
 class StateMachine:
     def __init__(self, target):
         self.object_area = target.target_area
@@ -32,7 +33,9 @@ class StateMachine:
             M = cv2.moments(contour)
             cX = int(M["m10"] / M["m00"])
             cY = int(M["m01"] / M["m00"])
-            if (cv2.pointPolygonTest(contour, correlation_prediction_window, False) >= 0) or ((correlation_prediction_window[1] - cX >=15) and (correlation_prediction_window[0] - cY >=15)):
+            if (cv2.pointPolygonTest(contour, correlation_prediction_window, False) >= 0) or (
+                    abs(correlation_prediction_window[1] - cX >= 15) and abs(
+                    correlation_prediction_window[0] - cY >= 15)):
                 object_contour = contour
                 object_current_pos = (correlation_prediction[1], correlation_prediction[0])
                 self.use_correlation_prediction = True
@@ -47,7 +50,8 @@ class StateMachine:
                 M = cv2.moments(contour)
                 cX = int(M["m10"] / M["m00"])
                 cY = int(M["m01"] / M["m00"])
-                if (cv2.pointPolygonTest(contour, center_of_mass_window, False) >= 0) or ((center_of_mass_window[1] - cX >=15) and (center_of_mass_window[0] - cY >=15)):
+                if (cv2.pointPolygonTest(contour, center_of_mass_window, False) >= 0) or (
+                        abs(center_of_mass_window[1] - cX >= 15) and abs(center_of_mass_window[0] - cY >= 15)):
                     object_contour = contour
                     object_current_pos = (center_of_mass[1], center_of_mass[0])
                     self.use_center_of_mass_prediction = True

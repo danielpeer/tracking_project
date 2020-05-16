@@ -52,7 +52,6 @@ def click(event, x, y, flags, param):
         pressed = True
 
 
-
 ############################################################################################################
 
 def add_gaussian_noise(search_window_info):
@@ -63,5 +62,13 @@ def add_gaussian_noise(search_window_info):
     noisy_img_clipped = np.clip(noisy_img, 0, 255)
     search_window_info.search_window = noisy_img_clipped
 
+
 ########################################################################################################
 
+def frame_scaling(frame):
+    scale_percent = 50
+    width = int(frame.shape[1] * scale_percent / 100)
+    height = int(frame.shape[0] * scale_percent / 100)
+    dim = (width, height)
+    resize_frame = cv2.resize(frame, dim, interpolation=cv2.INTER_AREA)
+    return resize_frame

@@ -2,9 +2,9 @@ import cv2
 import numpy as np
 from videos import *
 
-cap = cv2.VideoCapture(".\\..\\videos\\walking_alone.mp4")
+cap = cv2.VideoCapture(".\\..\\videos\\walking_alone.avi")
 kernel = np.ones((5, 5), np.uint8)
-subtractor = cv2.createBackgroundSubtractorMOG2(history=0, varThreshold=50, detectShadows=True)
+subtractor = cv2.createBackgroundSubtractorMOG2(history=20, varThreshold=200, detectShadows=True)
 
 while True:
     scale_percent = 50
@@ -15,16 +15,11 @@ while True:
     resized_frame = cv2.resize(frame, dim, interpolation=cv2.INTER_AREA)
     gray = cv2.cvtColor(resized_frame, cv2.COLOR_BGR2GRAY)
     mask = subtractor.apply(gray)
-    cv2.imshow("mask", mask)
     #mask = cv2.morphologyEx(mask, cv2.MORPH_GRADIENT, kernel)
-    mask = cv2.GaussianBlur(mask, (3, 3), 0)
+    #mask = cv2.GaussianBlur(mask, (3, 3), 0)
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
-    #mask = cv2.erode(mask, kernel, iterations=1)
-
-
-    #mask = cv2.erode(mask, kernel, iterations=1)
-    #mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
-
+    # mask = cv2.erode(mask, kernel, iterations=1)
+    #mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
 
     cv2.imshow("Frame", resized_frame)
     cv2.imshow("mask", mask)

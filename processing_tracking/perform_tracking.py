@@ -60,6 +60,7 @@ def perform_tracking():
                 # converting to grayscale in order to calculate correlation and applying background substraction mask
                 gray = cv2.cvtColor(resized_frame, cv2.COLOR_BGR2GRAY)
                 mask = substractor.apply(gray)
+                cv2.threshold(mask,2,255,cv2.THRESH_BINARY)
                 # background substraction needs a couple of frames to learn the target
                 if mask[0][0] == 127 or count < 5:
                     count += 1

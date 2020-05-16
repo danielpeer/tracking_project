@@ -10,7 +10,7 @@ class Target:
         x, y, w, h = get_target(frame)
         self.target = mask[y:y + h, x:x + w]
         self.current_pos = (x + int(w / 2), y + int(h / 2))
-        self.target_area = get_object_dimensions(self.current_pos[0], self.current_pos[1], mask)
+        self.target_area = get_object_dimensions(self.current_pos[0], self.current_pos[1], self.target)
         self.target_w = int(self.target.shape[0])
         self.target_h = int(self.target.shape[1])
 
@@ -23,10 +23,8 @@ def get_object_dimensions(x, y, mask):
     object_contour = None
     ret, thresh = cv2.threshold(mask, 70, 255, 0)
     contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    for contour in contours:
-        if cv2.pointPolygonTest(contour, (x, y), False) >= 0:
-            object_contour = contour
-            break
+    contours = merge_contours(contours, mask)
+    object_contour = contours [0]
     contour_area = cv2.contourArea(object_contour)
     return contour_area
 
@@ -39,3 +37,39 @@ def get_target(gray):
         gray, from_center)
     cv2.destroyAllWindows()
     return x, y, w, h
+def find_if_close(cnt1,cnt2):
+    row1,row2 = cnt1.shape[0], cnt2.shape[0]
+    for i in range(row1):
+        for j in range(row2):
+            dist = np.linalg.norm(cnt1[i]-cnt2[j])
+            if abs(dist) < 50:
+                return True
+            elif i == row1-1 and j == row2-1:
+                return False
+
+def merge_contours(contours,mask):
+    LENGTH = len(contours)
+    status = np.zeros((LENGTH, 1))
+
+    for i, cnt1 in enumerate(contours):
+        x = i
+        if i != LENGTH-1:
+            for j,cnt2 in enumerate(contours[i+1:]):
+                x = x+1
+                dist = find_if_close(cnt1,cnt2)
+                if dist == True:
+                    val = min(status[i],status[x])
+                    status[x] = status[i] = val
+                else:
+                    if status[x]==status[i]:
+                        status[x] = i+1
+
+    unified = []
+    maximum = int(status.max())+1
+    for i in range(maximum):
+        pos = np.where(status == i)[0]
+        if pos.size != 0:
+            cont = np.vstack([contours[i] for i in pos])
+            hull = cv2.convexHull(cont)
+            unified.append(hull)
+    return unified

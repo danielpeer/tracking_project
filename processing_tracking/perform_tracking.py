@@ -19,7 +19,7 @@ def perform_tracking():
     if system_mode != "debug ":
         input_video = input("Please enter a video path:\n")
     else:
-        input_video = ".\\..\\videos\\walking_alone.mp4"
+        input_video = "C:\\Users\\danielpeer\\Downloads\\a.mp4"
     try:
         cap = cv2.VideoCapture(input_video)
         select_target_flag = False
@@ -60,7 +60,7 @@ def perform_tracking():
                 # converting to grayscale in order to calculate correlation and applying background substraction mask
                 gray = cv2.cvtColor(resized_frame, cv2.COLOR_BGR2GRAY)
                 mask = substractor.apply(gray)
-                cv2.threshold(mask,2,255,cv2.THRESH_BINARY)
+                mask = cv2.threshold(mask, 2, 255, cv2.THRESH_BINARY)[1]
                 # background substraction needs a couple of frames to learn the target
                 if mask[0][0] == 127 or count < 5:
                     count += 1
@@ -75,7 +75,6 @@ def perform_tracking():
                     state_holder = StateMachine(target_info)
                     select_target_flag = True
                 # creating the search window for the current frame
-                cv2.imshow('mask', mask)
                 search_window_info.update_search_window(target_info, mask)
 
                 if should_add_gaussian_noise:

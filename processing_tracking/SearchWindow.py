@@ -7,8 +7,8 @@ class SearchWindow:
         self.search_window = None
         self.top_left_corner_x = None
         self.top_left_corner_y = None
-        self.window_w = target.target_w * 4
-        self.window_h = target.target_h * 4
+        self.window_w = target.target_w * 3
+        self.window_h = target.target_h * 3
 
     def update_search_window(self, target_info, mask):
         """

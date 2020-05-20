@@ -1,5 +1,4 @@
-import cv2
-from processing_tracking.perform_tracking_utilities import *
+
 from correlation_filter.corr_tracker import *
 from center_of_mass_filter.calculate_center_of_mass import *
 from kalman_filter.kalman_filter import *
@@ -8,14 +7,16 @@ from processing_tracking.target import *
 from processing_tracking.SearchWindow import *
 from processing_tracking.GUI import *
 from processing_tracking.perform_tracking_utilities import *
-from videos import *
+from processing_tracking.stabilize import *
+import time
+
 
 system_mode = "debug "
 should_add_gaussian_noise = False
 
 
 def perform_tracking():
-
+    start_time_prog = time.time()
     if system_mode != "debug ":
         input_video = input("Please enter a video path:\n")
     else:
@@ -30,6 +31,16 @@ def perform_tracking():
             print("Error opening video stream or file")
             return
 
+        #stabilize video
+        video_stabilization(cap)
+        cap.release()
+        input_video = ".\\..\\process_tracking\\stabilized.avi"
+        cap = cv2.VideoCapture(input_video)
+        if not cap.isOpened():
+            print("Error opening video stream or file")
+            return
+
+        # background subtraction
         # Randomly select 25 frames to create background for background subtraction
         frameIds = cap.get(cv2.CAP_PROP_FRAME_COUNT) * np.random.uniform(size=25)
 
@@ -45,8 +56,8 @@ def perform_tracking():
         background = np.median(frames, axis=0).astype(dtype=np.uint8)
         gray_background = cv2.cvtColor(background, cv2.COLOR_BGR2GRAY)
         cap.release()
+
         cap = cv2.VideoCapture(input_video)
-        cv2.imshow('gray_background', gray_background)
         # retrieving Resolution
         frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
@@ -58,7 +69,6 @@ def perform_tracking():
         out1 = cv2.VideoWriter('berlin_walk.avi', cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), fps,
                                (frame_width, frame_height))
         red = [0, 0, 255]
-        #substractor = cv2.createBackgroundSubtractorMOG2(history=20, varThreshold=50, detectShadows=True)
 
         # Read until video is completed
         retries = 0
@@ -70,7 +80,7 @@ def perform_tracking():
                 # adjusting frame size to fit screen properly
                 resized_frame = frame_scaling(frame)
 
-                # converting to grayscale in order to calculate correlation and applying background substraction mask
+                # converting to grayscale in order to calculate correlation and applying background subtraction mask
                 gray = cv2.cvtColor(resized_frame, cv2.COLOR_BGR2GRAY)
 
                 mask = cv2.absdiff(gray_background, gray)
@@ -83,14 +93,15 @@ def perform_tracking():
                     state_holder = StateMachine(target_info)
                     select_target_flag = True
                 # creating the search window for the current frame
-                cv2.imshow('mask', mask)
                 search_window_info.update_search_window(target_info, mask)
 
                 if should_add_gaussian_noise:
                     add_gaussian_noise(search_window_info)
-
+                start_time_corr = time.time()
                 correlation_prediction = get_correlation_prediction(target_info, search_window_info)
+                start_time_cmass = time.time()
                 center_of_mass_prediction = get_center_of_mass_prediction(search_window_info)
+                start_time_state = time.time()
                 current_state = state_holder.get_current_state(search_window_info, center_of_mass_prediction,
                                                                correlation_prediction)
                 prediction = get_integrated_prediction(correlation_prediction, center_of_mass_prediction, state_holder)
@@ -116,6 +127,9 @@ def perform_tracking():
                 # Press Q on keyboard to  exit
                 if cv2.waitKey(25) & 0xFF == ord('q'):
                     break
+                print("correlation took", str(time.time() - start_time_corr), "sec to run")
+                print("center of mass took", str(time.time() - start_time_cmass), "sec to run")
+                print("state machine", str(time.time() - start_time_state), "sec to run")
             else:
                 break
         # When everything done, release the video capture object
@@ -124,10 +138,11 @@ def perform_tracking():
 
         # Closes all the frames
         cv2.destroyAllWindows()
+
     except IOError:
         print(IOError)
         print("File not accessible")
-
+    print("The program took", str(time.time() - start_time_prog), "sec to run")
 
 def get_integrated_prediction(corr_prediction, center_of_mass_prediction, state_machine):
     if state_machine.use_center_of_mass_prediction and state_machine.use_correlation_prediction:

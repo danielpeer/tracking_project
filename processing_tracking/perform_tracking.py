@@ -30,7 +30,7 @@ def perform_tracking():
         if not cap.isOpened():
             print("Error opening video stream or file")
             return
-
+        '''
         #stabilize video
         video_stabilization(cap)
         cap.release()
@@ -39,7 +39,7 @@ def perform_tracking():
         if not cap.isOpened():
             print("Error opening video stream or file")
             return
-
+        '''
         # background subtraction
         # Randomly select 25 frames to create background for background subtraction
         frameIds = cap.get(cv2.CAP_PROP_FRAME_COUNT) * np.random.uniform(size=25)

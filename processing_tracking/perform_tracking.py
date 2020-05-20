@@ -58,7 +58,7 @@ def perform_tracking():
         out1 = cv2.VideoWriter('berlin_walk.avi', cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), fps,
                                (frame_width, frame_height))
         red = [0, 0, 255]
-        #substractor = cv2.createBackgroundSubtractorMOG2(history=20, varThreshold=50, detectShadows=True)
+
 
         # Read until video is completed
         retries = 0

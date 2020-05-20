@@ -34,7 +34,7 @@ def fixBorder(frame):
 ###full implementation
 start_time = time.time()
 #read unstable video
-cap = cv2.VideoCapture('INPUT.avi')
+cap = cv2.VideoCapture('.\\..\\videos\\unstabilize.avi')
 
 # Get frame count
 n_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))

@@ -31,7 +31,7 @@ def perform_tracking():
             return
 
         # Randomly select 25 frames to create background for background subtraction
-        frameIds = cap.get(cv2.CAP_PROP_FRAME_COUNT) * np.random.uniform(size=25)
+        frameIds = cap.get(cv2.CAP_PROP_FRAME_COUNT) * np.random.uniform(size=50)
 
         # Store selected frames in an array
         frames = []

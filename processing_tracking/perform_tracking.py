@@ -31,7 +31,7 @@ def perform_tracking():
             return
 
         # Randomly select 25 frames to create background for background subtraction
-        frameIds = cap.get(cv2.CAP_PROP_FRAME_COUNT) * np.random.uniform(size=50)
+        frameIds = cap.get(cv2.CAP_PROP_FRAME_COUNT) * np.random.uniform(size=25)
 
         # Store selected frames in an array
         frames = []
@@ -58,7 +58,7 @@ def perform_tracking():
         out1 = cv2.VideoWriter('berlin_walk.avi', cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), fps,
                                (frame_width, frame_height))
         red = [0, 0, 255]
-
+        #substractor = cv2.createBackgroundSubtractorMOG2(history=20, varThreshold=50, detectShadows=True)
 
         # Read until video is completed
         retries = 0

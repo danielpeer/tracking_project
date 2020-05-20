@@ -30,8 +30,9 @@ def perform_tracking():
         if not cap.isOpened():
             print("Error opening video stream or file")
             return
-        '''
+
         #stabilize video
+        '''
         video_stabilization(cap)
         cap.release()
         input_video = ".\\..\\process_tracking\\stabilized.avi"

@@ -19,7 +19,7 @@ def perform_tracking():
     if system_mode != "debug ":
         input_video = input("Please enter a video path:\n")
     else:
-        input_video = ".\\..\\videos\\walking_alone.mp4"
+        input_video = "C:\\Users\\danielpeer\\Downloads\\a.mp4"
     try:
         cap = cv2.VideoCapture(input_video)
         select_target_flag = False
@@ -36,7 +36,7 @@ def perform_tracking():
 
         # Retrieving fps
         fps = int(cap.get(cv2.CAP_PROP_FPS))
-
+        i = 0
         # Defining the codec and creating VideoWriter object. The output is stored in 'Vid1_Binary.avi' file.
         out1 = cv2.VideoWriter('berlin_walk.avi', cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), fps,
                                (frame_width, frame_height))
@@ -49,7 +49,9 @@ def perform_tracking():
             scale_percent = 50  # percent of original size
             # Capture frame-by-frame
             ret, frame = cap.read()
-
+            i+=1
+            if i % 7 != 0:
+                continue
             if ret:
                 # adjusting frame size to fit screen properly
                 width = int(frame.shape[1] * scale_percent / 100)

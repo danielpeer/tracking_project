@@ -53,6 +53,7 @@ class StateMachine:
             self.use_correlation_prediction = False
 
         if object_contour is None:
+            print("a")
             for contour in contours:
                 M = cv2.moments(contour)
                 cX = int(M["m10"] / M["m00"])
@@ -74,14 +75,16 @@ class StateMachine:
         return self.previous_state
 
     def _get_current_state_from_visible_object(self, current_object_area, object_current_pos):
-        if current_object_area / self.previous_area < 0.7:
+        print("object is visible ")
+        if current_object_area / self.previous_area < 0.6:
             self.previous_state = CONCEALMENT
-        elif current_object_area / self.previous_area > 1.5 or current_object_area > 1.5 * self.object_area:
+        elif current_object_area / self.previous_area > 2.5:
             self.previous_state = OVERLAP
         else:
             self.previous_state = VISIBLE_OBJECT
 
     def _get_current_state_from_overlap(self, current_object_area):
+        print("overlap")
         global USE_CENTER_OF_MASS_PREDICTION
         if self.previous_area > self.object_area and current_object_area / self.previous_area < 0.67:
             self.previous_state = VISIBLE_OBJECT
@@ -90,6 +93,7 @@ class StateMachine:
             self.previous_state = OVERLAP
 
     def _get_current_state_from_concealment(self, current_object_area):
+        print("concealment")
         if current_object_area < self.object_area * 0.7:
             self.previous_state = CONCEALMENT
         else:
@@ -103,7 +107,7 @@ def find_if_close(cnt1,cnt2):
     for i in range(row1):
         for j in range(row2):
             dist = np.linalg.norm(cnt1[i]-cnt2[j])
-            if abs(dist) < 20:
+            if abs(dist) < 15:
                 return True
             elif i == row1-1 and j == row2-1:
                 return False

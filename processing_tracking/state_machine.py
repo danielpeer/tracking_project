@@ -78,7 +78,7 @@ class StateMachine:
         print("object is visible ")
         if current_object_area / self.previous_area < 0.6:
             self.previous_state = CONCEALMENT
-        elif current_object_area / self.previous_area > 2.5:
+        elif current_object_area / self.previous_area > 1.8 or current_object_area > 1.8 * self.object_area:
             self.previous_state = OVERLAP
         else:
             self.previous_state = VISIBLE_OBJECT

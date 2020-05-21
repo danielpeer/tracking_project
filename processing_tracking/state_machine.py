@@ -4,10 +4,11 @@ import math
 from scipy.spatial.distance import euclidean
 
 VISIBLE_OBJECT = 0
-OVERLAP = 1
+OVERLAP = 1.5
 CONCEALMENT = 2
 EXIT_OVERLAP = 3
 MAXIMUM_DISTANCE = 20
+
 
 class StateMachine:
     def __init__(self, target):
@@ -102,15 +103,17 @@ class StateMachine:
     def update_previous_pos(self, pos):
         self.previous_pos = pos
 
-def find_if_close(cnt1,cnt2):
-    row1,row2 = cnt1.shape[0], cnt2.shape[0]
+
+def find_if_close(cnt1, cnt2):
+    row1, row2 = cnt1.shape[0], cnt2.shape[0]
     for i in range(row1):
         for j in range(row2):
-            dist = np.linalg.norm(cnt1[i]-cnt2[j])
+            dist = np.linalg.norm(cnt1[i] - cnt2[j])
             if abs(dist) < 15:
                 return True
-            elif i == row1-1 and j == row2-1:
+            elif i == row1 - 1 and j == row2 - 1:
                 return False
+
 
 def merge_contours(contours):
     LENGTH = len(contours)
@@ -118,19 +121,19 @@ def merge_contours(contours):
 
     for i, cnt1 in enumerate(contours):
         x = i
-        if i != LENGTH-1:
-            for j, cnt2 in enumerate(contours[i+1:]):
-                x = x+1
+        if i != LENGTH - 1:
+            for j, cnt2 in enumerate(contours[i + 1:]):
+                x = x + 1
                 dist = find_if_close(cnt1, cnt2)
                 if dist == True:
                     val = min(status[i], status[x])
                     status[x] = status[i] = val
                 else:
                     if status[x] == status[i]:
-                        status[x] = i+1
+                        status[x] = i + 1
 
     unified = []
-    maximum = int(status.max())+1
+    maximum = int(status.max()) + 1
     for i in range(maximum):
         pos = np.where(status == i)[0]
         if pos.size != 0:

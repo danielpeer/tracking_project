@@ -2,6 +2,7 @@ import math
 import cv2
 import numpy as np
 
+
 class SearchWindow:
     def __init__(self, target):
         self.search_window = None
@@ -9,6 +10,7 @@ class SearchWindow:
         self.top_left_corner_y = None
         self.window_w = target.target_w * 3
         self.window_h = target.target_h * 3
+
 
     def update_search_window(self, target_info, mask):
         """
@@ -21,8 +23,10 @@ class SearchWindow:
         y, x = target_info.current_pos
         x_window = x
         y_window = y
-        window_w = self.window_w
-        window_h = self.window_h
+        window_w = target_info.target_w * 3
+        window_h = target_info.target_h * 3
+        # window_w = self.window_w
+        # window_h = self.window_h
         gray_width, gray_height = mask.shape
         top_left_corner_x = x - (window_w / 2)
         top_left_corner_y = y - (window_h / 2)
@@ -39,7 +43,10 @@ class SearchWindow:
             y_window = gray_height - (window_h / 2)
             top_left_corner_y = gray_height - window_h
         search_window = mask[int(x_window - math.floor(window_w / 2)): int(x_window + math.floor(window_w / 2)),
-                    int(y_window - math.floor(window_h / 2)): int(y_window + math.floor(window_h / 2))]
+                        int(y_window - math.floor(window_h / 2)): int(y_window + math.floor(window_h / 2))]
         self.top_left_corner_x = top_left_corner_x
         self.top_left_corner_y = top_left_corner_y
+        self.window_h = window_h
+        self.window_w = window_w
         self.search_window = search_window
+

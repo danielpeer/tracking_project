@@ -1,4 +1,3 @@
-
 from correlation_filter.corr_tracker import *
 from center_of_mass_filter.calculate_center_of_mass import *
 from kalman_filter.kalman_filter import *
@@ -9,7 +8,6 @@ from processing_tracking.GUI import *
 from processing_tracking.perform_tracking_utilities import *
 from processing_tracking.stabilize import *
 import time
-
 
 system_mode = "debug "
 should_add_gaussian_noise = False
@@ -31,7 +29,7 @@ def perform_tracking():
             print("Error opening video stream or file")
             return
 
-        #stabilize video
+        # stabilize video
         '''
         video_stabilization(cap)
         cap.release()
@@ -41,6 +39,7 @@ def perform_tracking():
             print("Error opening video stream or file")
             return
         '''
+
         # background subtraction
         # Randomly select 25 frames to create background for background subtraction
         frameIds = cap.get(cv2.CAP_PROP_FRAME_COUNT) * np.random.uniform(size=25)
@@ -70,7 +69,16 @@ def perform_tracking():
         out1 = cv2.VideoWriter('berlin_walk.avi', cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), fps,
                                (frame_width, frame_height))
         red = [0, 0, 255]
-
+        search_window_lst = []
+        kalman_lst = []
+        state_holder_lst = []
+        correlation_prediction_lst = []
+        center_of_mass_prediction_lst = []
+        prediction_lst = []
+        final_prediction_lst = []
+        current_state_lst = []
+        calc_x_pos = []
+        calc_y_pos = []
         # Read until video is completed
         retries = 0
         while cap.isOpened():
@@ -88,43 +96,63 @@ def perform_tracking():
                 _, mask = cv2.threshold(mask, 25, 255, cv2.THRESH_BINARY)
 
                 if not select_target_flag:  # creating the target only once
-                    target_info = Target(resized_frame, mask)
-                    search_window_info = SearchWindow(target_info)
-                    kalman = KalmanFilter(target_info, fps)
-                    state_holder = StateMachine(target_info)
+                    targets_info = []
+                    i = 0
+                    while True:
+                        targets_info.append(Target(resized_frame, mask))
+                        if targets_info[i].target_w == 0 & targets_info[i].target_h == 0:
+                            targets_info.pop(i)  # once c pressed, another null object is added to the list of
+                            # targets, therefore remove
+                            break
+                        i += 1
+                    for i in range(len(targets_info)):
+                        search_window_lst.append(SearchWindow(targets_info[i]))
+                        kalman_lst.append(KalmanFilter(targets_info[i], fps))
+                        state_holder_lst.append(StateMachine(targets_info[i]))
                     select_target_flag = True
-                # creating the search window for the current frame
-                search_window_info.update_search_window(target_info, mask)
 
-                if should_add_gaussian_noise:
-                    add_gaussian_noise(search_window_info)
-                start_time_corr = time.time()
-                correlation_prediction = get_correlation_prediction(target_info, search_window_info)
-                start_time_cmass = time.time()
-                center_of_mass_prediction = get_center_of_mass_prediction(search_window_info)
-                start_time_state = time.time()
-                current_state = state_holder.get_current_state(search_window_info, center_of_mass_prediction,
-                                                               correlation_prediction)
-                prediction = get_integrated_prediction(correlation_prediction, center_of_mass_prediction, state_holder)
+                # creating the search windows for the current frame
+                for i in range(len(targets_info)):
+                    search_window_lst[i].update_search_window(targets_info[i], mask)
+                    if should_add_gaussian_noise:
+                        add_gaussian_noise(search_window_lst[i])
 
-                if current_state == OVERLAP or current_state == CONCEALMENT:
-                    kalman.base_kalman_prior_prediction()
-                else:
-                    kalman.base_measurement()
+                # calculating predictions for each target
+                for i in range(len(targets_info)):
+                    start_time_corr = time.time()
+                    correlation_prediction_lst.append(
+                        get_correlation_prediction(targets_info[i], search_window_lst[i]))
+                    start_time_cmass = time.time()
+                    center_of_mass_prediction_lst.append(get_center_of_mass_prediction(search_window_lst[i]))
+                    start_time_state = time.time()
+                    current_state_lst.append(state_holder_lst[i].get_current_state(search_window_lst[i],
+                                                                                      center_of_mass_prediction_lst[i],
+                                                                                      correlation_prediction_lst[i]))
+                    prediction_lst.append(get_integrated_prediction(correlation_prediction_lst[i],
+                                                                       center_of_mass_prediction_lst[i],
+                                                                       state_holder_lst[i]))
+                    if current_state_lst[i] == OVERLAP or current_state_lst[i] == CONCEALMENT:
+                        kalman_lst[i].base_kalman_prior_prediction()
+                    else:
+                        kalman_lst[i].base_measurement()
 
-                final_prediction = kalman.get_prediction(prediction)
-                x, y = final_prediction[0][0], final_prediction[1][0]
-                cv2.rectangle(resized_frame, (y - int(target_info.target_h / 2), x - int(target_info.target_w / 2)),
-                              (y + int(target_info.target_h / 2), x + int(target_info.target_w / 3)), red, 1)
+                    final_prediction_lst.append(kalman_lst[i].get_prediction(prediction_lst[i]))
+                    x, y = final_prediction_lst[i][0][0], final_prediction_lst[i][1][0]
+                    calc_x_pos.append(x)
+                    calc_y_pos.append(y)
+                    cv2.rectangle(resized_frame, (
+                        calc_y_pos[i] - int(targets_info[i].target_h / 2),
+                        calc_x_pos[i] - int(targets_info[i].target_w / 2)),
+                                  (calc_y_pos[i] + int(targets_info[i].target_h / 2),
+                                   calc_x_pos[i] + int(targets_info[i].target_w / 3)), red, 1)
 
-                target_info.update_position(y, x)
-                state_holder.update_previous_pos((x, y))
+                    targets_info[i].update_position(calc_y_pos[i], calc_x_pos[i])
+                    state_holder_lst[i].update_previous_pos((calc_x_pos[i], calc_y_pos[i]))
                 # Display the resulting frame
                 cv2.imshow('Frame', resized_frame)
 
                 # Write the frame into the file
                 out1.write(resized_frame)
-
                 # Press Q on keyboard to  exit
                 if cv2.waitKey(25) & 0xFF == ord('q'):
                     break
@@ -144,6 +172,7 @@ def perform_tracking():
         print(IOError)
         print("File not accessible")
     print("The program took", str(time.time() - start_time_prog), "sec to run")
+
 
 def get_integrated_prediction(corr_prediction, center_of_mass_prediction, state_machine):
     if state_machine.use_center_of_mass_prediction and state_machine.use_correlation_prediction:

@@ -6,7 +6,7 @@ window_w = 60
 window_h = 60
 target_w = 30
 target_h = 30
-
+scale_percent = 50
 
 ############################################################### Search Window #####################################################
 
@@ -66,9 +66,14 @@ def add_gaussian_noise(search_window_info):
 ########################################################################################################
 
 def frame_scaling(frame):
-    scale_percent = 50
     width = int(frame.shape[1] * scale_percent / 100)
     height = int(frame.shape[0] * scale_percent / 100)
     dim = (width, height)
     resize_frame = cv2.resize(frame, dim, interpolation=cv2.INTER_AREA)
     return resize_frame
+
+
+def get_frame_resize_dim(frame_shape):
+    width = int(frame_shape[1] * scale_percent / 100)
+    height = int(frame_shape[0] * scale_percent / 100)
+    return width, height

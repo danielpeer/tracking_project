@@ -25,8 +25,7 @@ def get_prediction(target, color_image):
     center_of_mass_prediction = results[1]
     correlation_prediction = results[0]
     current_state = target.state_holder.get_current_state(target.search_window,
-                                                          center_of_mass_prediction, correlation_prediction, color_image,
-                                                          target)
+                                                          center_of_mass_prediction, correlation_prediction)
     prediction = get_integrated_prediction(correlation_prediction, center_of_mass_prediction, target.state_holder)
     if current_state == OVERLAP or current_state == CONCEALMENT:
         target.kalman_filter.base_kalman_prior_prediction()
@@ -40,11 +39,12 @@ def get_prediction(target, color_image):
     target.state_holder.update_previous_pos((x, y))
 
 def perform_tracking():
+    j = 0
     start_time_prog = time.time()
     if system_mode != "debug ":
         input_video = input("Please enter a video path:\n")
     else:
-        input_video = "C:\\Users\\danielpeer\\Downloads\\b.mp4"
+        input_video = "C:\\Users\\danielpeer\\Downloads\\p.mp4"
     try:
         cap = cv2.VideoCapture(input_video)
         select_target_flag = False
@@ -56,15 +56,14 @@ def perform_tracking():
             return
 
         # stabilize video
-        '''
+
         video_stabilization(cap)
         cap.release()
-        input_video = ".\\..\\process_tracking\\stabilized.avi"
+        input_video = 'C:\\Users\\danielpeer\\Downloads\\stabilized.avi'
         cap = cv2.VideoCapture(input_video)
         if not cap.isOpened():
             print("Error opening video stream or file")
             return
-        '''
 
         # background subtraction
         # Randomly select 25 frames to create background for background subtraction
@@ -75,7 +74,8 @@ def perform_tracking():
         for fid in frameIds:
             cap.set(cv2.CAP_PROP_POS_FRAMES, fid)
             ret, frame = cap.read()
-            resized_frame = frame_scaling(frame)
+            # resized_frame = frame_scaling(frame)
+            resized_frame = frame
             frames.append(resized_frame)
 
         # Calculate the median along the time axis
@@ -99,24 +99,23 @@ def perform_tracking():
 
         # Read until video is completed
         retries = 0
-        j=0
+
         while cap.isOpened():
+            j += 1
+            if (j%7!=0):
+                continue
 
             # Capture frame-by-frame
             ret, frame = cap.read()
-            j+=1
-            #if(j%7 != 0):
-               # continue
 
             if ret:
                 # adjusting frame size to fit screen properly
-                resized_frame = frame_scaling(frame)
-
+               # resized_frame = frame_scaling(frame)
+                resized_frame = frame
                 # converting to grayscale in order to calculate correlation and applying background subtraction mask
                 gray = cv2.cvtColor(resized_frame, cv2.COLOR_BGR2GRAY)
-
                 mask = cv2.absdiff(gray_background, gray)
-                _, mask = cv2.threshold(mask, 25, 255, cv2.THRESH_BINARY)
+                _, mask = cv2.threshold(mask, 50, 255, cv2.THRESH_BINARY)
                 cv2.imshow('mask', mask)
                 if not select_target_flag:  # creating the target only once
                     targets_lst = []
@@ -145,7 +144,7 @@ def perform_tracking():
                 for thread in threads_lst:
                     thread.join()
                 end_processing = time.time()
-                print("total time", str(start_processing - end_processing), "sec to run")
+            #    print("total time", str(start_processing - end_processing), "sec to run")
                 # calculating predictions for each target
                 for target in targets_lst:
                     cv2.rectangle(resized_frame, (

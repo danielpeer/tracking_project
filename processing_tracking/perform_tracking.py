@@ -44,7 +44,7 @@ def perform_tracking():
     if system_mode != "debug ":
         input_video = input("Please enter a video path:\n")
     else:
-        input_video = "C:\\Users\\danielpeer\\Downloads\\p.mp4"
+        input_video = "C:\\Users\\danielpeer\\Downloads\\r.mp4"
     try:
         cap = cv2.VideoCapture(input_video)
         select_target_flag = False
@@ -115,7 +115,7 @@ def perform_tracking():
                 # converting to grayscale in order to calculate correlation and applying background subtraction mask
                 gray = cv2.cvtColor(resized_frame, cv2.COLOR_BGR2GRAY)
                 mask = cv2.absdiff(gray_background, gray)
-                _, mask = cv2.threshold(mask, 50, 255, cv2.THRESH_BINARY)
+                _, mask = cv2.threshold(mask, 60, 255, cv2.THRESH_BINARY)
                 cv2.imshow('mask', mask)
                 if not select_target_flag:  # creating the target only once
                     targets_lst = []
@@ -176,15 +176,9 @@ def perform_tracking():
 
 
 def get_integrated_prediction(corr_prediction, center_of_mass_prediction, state_machine):
-    if state_machine.use_center_of_mass_prediction and state_machine.use_correlation_prediction:
-        center_of_mass_prediction = 0.5 * np.array([[center_of_mass_prediction[0]], [center_of_mass_prediction[1]]])
-        corr_prediction = 0.5 * np.array([[corr_prediction[0]], [corr_prediction[1]]])
-        prediction = center_of_mass_prediction + corr_prediction
-    elif state_machine.use_correlation_prediction:
-        prediction = np.array([[corr_prediction[0]], [corr_prediction[1]]])
-    else:
-        prediction = np.array([[center_of_mass_prediction[0]], [center_of_mass_prediction[1]]])
-    return prediction
+    center_of_mass_prediction = state_machine.center_of_mass_ratio * np.array([[center_of_mass_prediction[0]], [center_of_mass_prediction[1]]])
+    corr_prediction = state_machine.corr_ratio * np.array([[corr_prediction[0]], [corr_prediction[1]]])
+    return center_of_mass_prediction + corr_prediction
 
 
 perform_tracking()

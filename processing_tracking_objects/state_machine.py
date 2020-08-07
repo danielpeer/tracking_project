@@ -15,12 +15,10 @@ class StateMachine:
         self.previous_area = target.target_area
         self.previous_pos = target.current_pos
         self.previous_state = VISIBLE_OBJECT
-        self.use_center_of_mass_prediction = False
-        self.use_correlation_prediction = False
+        self.corr_ratio = 0
+        self.center_of_mass_ratio = 0
 
     def get_current_state(self, search_window_info, center_of_mass, correlation_prediction):
-        global USE_CENTER_OF_MASS_PREDICTION
-        global USE_CORRELATION_PREDICTION
         center_of_mass_window = (center_of_mass[1] - search_window_info.top_left_corner_y,
                                  center_of_mass[0] - search_window_info.top_left_corner_x)
 
@@ -31,11 +29,10 @@ class StateMachine:
         contours, hierarchy = cv2.findContours(search_window, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         contours = merge_contours(contours)
         for contour in contours:
-            dist = cv2.pointPolygonTest(contour, correlation_prediction_window, False)
-            if dist >= 0:
+            corr_dist = cv2.pointPolygonTest(contour, correlation_prediction_window, True)
+            if corr_dist >= 0:
                 object_contour = contour
                 object_current_pos = (correlation_prediction[1], correlation_prediction[0])
-                self.use_correlation_prediction = True
                 break
         closest_contour = None
         closest_contour_distance = math.inf
@@ -48,10 +45,20 @@ class StateMachine:
                     closest_contour = contour
                     closest_contour_distance = euclidean((cX, cY), correlation_prediction_window)
             object_contour = closest_contour
+        M = cv2.moments(object_contour)
+        cX = int(M["m10"] / M["m00"])
+        cY = int(M["m01"] / M["m00"])
+        corr_dist = 2 ** euclidean((cX, cY), correlation_prediction_window)
+        center_of_mass_dist = 2 ** euclidean((cX, cY), center_of_mass_window)
         current_object_area = cv2.contourArea(object_contour)
         self.previous_area = sum(self.previous_areas) / len(self.previous_areas)
-        self.use_center_of_mass_prediction = False
-
+        if cv2.pointPolygonTest(contour, center_of_mass_window, True) > 0:
+            self.corr_ratio = center_of_mass_dist /(corr_dist + center_of_mass_dist)
+            self.center_of_mass_ratio = corr_dist /(corr_dist + center_of_mass_dist)
+        else:
+            self.corr_ratio = 1
+            self.center_of_mass_ratio = 0
+        print(self.corr_ratio, self.center_of_mass_ratio)
         pervious_before = False
         if self.previous_state == VISIBLE_OBJECT:
             self._get_current_state_from_visible_object(current_object_area, object_current_pos)
@@ -70,20 +77,17 @@ class StateMachine:
         return self.previous_state
 
     def _get_current_state_from_visible_object(self, current_object_area, object_current_pos):
-        print("object is visible")
+       # print("object is visible")
         if current_object_area / self.previous_area < 0.6:
             self.previous_state = CONCEALMENT
-        elif current_object_area / self.previous_area > 1.2:
+        elif current_object_area / self.previous_area > 1.1:
             self.previous_state = OVERLAP
         else:
             self.previous_state = VISIBLE_OBJECT
-            self.use_center_of_mass_prediction = True
 
     def _get_current_state_from_overlap(self, current_object_area):
         print("overlap")
-        global USE_CENTER_OF_MASS_PREDICTION
-
-        if current_object_area < 1.1 * self.previous_area:
+        if current_object_area < self.previous_area:
             self.previous_state = VISIBLE_OBJECT
         else:
             self.previous_state = OVERLAP

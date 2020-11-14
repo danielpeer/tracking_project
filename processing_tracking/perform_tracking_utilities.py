@@ -77,3 +77,10 @@ def get_frame_resize_dim(frame_shape):
     width = int(frame_shape[1] * scale_percent / 100)
     height = int(frame_shape[0] * scale_percent / 100)
     return width, height
+
+
+def get_target_from_mask(image, mask):
+    result = cv2.bitwise_and(image, mask)
+    cv2.imshow("image", result)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()

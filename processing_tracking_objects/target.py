@@ -26,6 +26,8 @@ class Target:
         self.best_histogram = Queue()
         self.calc_x_pos = None
         self.calc_y_pos = None
+        self.target_image = None
+        self.detection = None
 
 
     def update_search_window(self, mask):
@@ -34,7 +36,8 @@ class Target:
     def get_correlation_prediction(self, results):
         results[0] = get_correlation_prediction(self.target_info, self.search_window)
 
-    def get_center_of_mass_prediction(self,results):
+    def get_center_of_mass_prediction(self, results):
         results[1] = get_center_of_mass_prediction(self.search_window)
 
-
+    def update_target_image(self, target_mask, color_image):
+        self.target_image = np.bitwise_and(color_image,target_mask)

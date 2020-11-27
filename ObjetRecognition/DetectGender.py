@@ -61,10 +61,10 @@ class GenderDetector:
                       metrics=['accuracy'])
 
         model.fit_generator(train_dataset,
-                            steps_per_epoch=70,
-                            epochs=10,
+                            steps_per_epoch=50,
+                            epochs=15,
                             validation_data=validation_dataset,
-                            validation_steps=5)
+                            validation_steps=50)
 
         self.model = model
 

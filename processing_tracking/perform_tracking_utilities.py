@@ -7,6 +7,8 @@ window_h = 60
 target_w = 30
 target_h = 30
 scale_percent = 50
+black = [0, 0, 0]
+
 
 ############################################################### Search Window #####################################################
 
@@ -84,3 +86,74 @@ def get_target_from_mask(image, mask):
     cv2.imshow("image", result)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
+
+
+def detect_new_targets(image, object_detections, suspected_targets, targets_lst):
+    targets = []
+    image_mask = np.zeros(image.shape)
+    image_mask.fill(255)  # or img[:] = 255
+    cv2.rectangle(image_mask, (70, 0), (image.shape[1] - 70, image.shape[0] - 120), black, -1)
+    mask = np.bitwise_and(image_mask.astype(int), image)
+    targets_dims = object_detections.get_targets_on_the_sides(mask)
+
+    for target_dim in targets_dims:
+        target_left = (target_dim[0], target_dim[1])
+        target_right = (target_dim[2], target_dim[3])
+        if target_dim[0] < 20 or target_dim[2] > 1260 or target_dim[1] < 20 or target_dim[3] > 700:
+            if target_dim[3] < 680 or target_dim[3] - target_dim[1] > 100:
+                overlap = False
+                should_check_second_loop = True
+                for target in suspected_targets:
+                    target_left_before = (target[0], target[1])
+                    target_right_before = (target[2], target[3])
+                    if do_overlap(target_left, target_right, target_left_before, target_right_before):
+                        if not detect_outgoing_targets(target, target_dim):
+                            targets.append(target_dim)
+                            suspected_targets.remove(target)
+                        else:
+                            suspected_targets.remove(target)
+                        should_check_second_loop = False
+                        break
+                if should_check_second_loop:
+                    overlap = False
+                    for target in targets_lst:
+                        current_target_l = (target.target_info.x, target.target_info.y)
+                        current_target_r = (
+                            target.target_info.x + target.target_info.w, target.target_info.y + target.target_info.h)
+                        if do_overlap(target_left, target_right, current_target_l, current_target_r):
+                            overlap = True
+                    if not overlap:
+                        suspected_targets.append(target_dim)
+    return targets
+
+
+def detect_outgoing_targets(frame_before_target_dim, frame_after_target_dim):
+    if frame_before_target_dim[3] > 700:
+        if frame_after_target_dim[1] >= frame_before_target_dim[1]-4:
+            return True
+
+    elif frame_before_target_dim[2] > 1260:
+        if frame_after_target_dim[0] >= frame_before_target_dim[0]-3:
+            return True
+
+    elif frame_before_target_dim[0] < 20:
+        if frame_after_target_dim[2] <= frame_before_target_dim[2]:
+            return True
+
+
+def do_overlap(l1, r1, l2, r2):
+    # If one rectangle is on left side of other
+
+    x1 = range(l1[0], r1[0])
+    x2 = range(l2[0], r2[0])
+    xs = set(x1)
+    z1 = xs.intersection(x2)
+
+    y1 = range(l1[1], r1[1])
+    y2 = range(l2[1], r2[1])
+    ys = set(y1)
+    z2 = ys.intersection(y2)
+
+    if len(z1) > 0 and len(z2):
+        return True
+    return False

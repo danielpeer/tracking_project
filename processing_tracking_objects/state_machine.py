@@ -51,7 +51,7 @@ class StateMachine:
         corr_dist = 2 ** euclidean((cX, cY), correlation_prediction_window)
         center_of_mass_dist = 2 ** euclidean((cX, cY), center_of_mass_window)
         current_object_area = cv2.contourArea(object_contour)
-        self.previous_area = sum(self.previous_areas) / len(self.previous_areas)
+        self.previous_area = max(sum(self.previous_areas) / len(self.previous_areas), 1)
         if cv2.pointPolygonTest(contour, center_of_mass_window, True) > 0:
             self.corr_ratio = center_of_mass_dist /(corr_dist + center_of_mass_dist)
             self.center_of_mass_ratio = corr_dist /(corr_dist + center_of_mass_dist)

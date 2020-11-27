@@ -119,9 +119,10 @@ def perform_tracking():
                 if not select_target_flag:  # creating the target only once
                     targets_lst = []
                     threads_lst = []
+                    suspected_targets = []
                     i = 0
                     while True:
-                        targets_lst.append(Target(resized_frame, mask, fps))
+                        targets_lst.append(Target(resized_frame, mask, fps, []))
                         if targets_lst[i].target_info.target_w == 0 & targets_lst[i].target_info.target_h == 0:
                             targets_lst.pop(i)  # once c pressed, another null object is added to the list of
                             # targets, therefore remove
@@ -130,7 +131,13 @@ def perform_tracking():
                     object_detector = ObjectDetector()
                     select_target_flag = True
 
-                # creating the search windows for the current frame
+                else:
+                    incoming_targets = detect_new_targets(resized_frame, object_detector, suspected_targets,targets_lst)
+                    for target in incoming_targets:
+                        target = Target(resized_frame, mask, fps, target)
+                        if target.target_info.target_area > 0:
+                            targets_lst.append(target)
+                # creating the search windows for the current fra
                 for current_target in targets_lst:
                     current_target.update_search_window(mask)
                   #  if should_add_gaussian_noise:
@@ -148,13 +155,13 @@ def perform_tracking():
                 for target in targets_lst:
                     target_mask = np.zeros(frame.shape)
                     cv2.rectangle(target_mask, (
-                        target.calc_y_pos - int(target.target_info.target_h / 2),
-                        target.calc_x_pos - int(target.target_info.target_w / 2)),
-                                  (target.calc_y_pos + int(target.target_info.target_h / 2),
-                                   target.calc_x_pos + int(target.target_info.target_w / 3)), white, -1)
+                        target.calc_y_pos - int(target.target_info.target_h / 2) - 5,
+                        target.calc_x_pos - int(target.target_info.target_w / 2) - 20),
+                                  (target.calc_y_pos + int(target.target_info.target_h / 2 + 5),
+                                   target.calc_x_pos + int(target.target_info.target_w / 3)+20), white, -1)
                     target.update_target_image(target_mask.astype(int), frame)
-                    if target.detection == None:
-                        target.detection = object_detector.update_detection(target.target_image)
+                    if target.detection is None:
+                        target.detection = object_detector.get_target_detect(target.target_image)
 
                 for target in targets_lst:
                     font = cv2.FONT_HERSHEY_SIMPLEX
@@ -181,8 +188,8 @@ def perform_tracking():
         # Closes all the frames
         cv2.destroyAllWindows()
 
-    except IOError:
-        print(IOError)
+    except IOError as e:
+        print(e)
         print("File not accessible")
     print("The program took", str(time.time() - start_time_prog), "sec to run")
 

@@ -7,8 +7,12 @@ from random import randint
 # from processing_tracking.perform_tracking_utilities import get_square_center, click
 
 class Target_Info:
-    def __init__(self, frame, mask):
-        x, y, w, h = get_target(frame)
+    def __init__(self, frame, mask, points):
+        if not points:
+            x, y, w, h = get_target(frame)
+        else:
+            x, y, w, h = points[0], points[1], points[2] - points[0], points[3] - points[1]
+
         self.target = mask[y:y + h, x:x + w]
         self.current_pos = (x + int(w / 2), y + int(h / 2))
         if (x != 0) and (y != 0):
@@ -17,9 +21,16 @@ class Target_Info:
             self.target_area = 0
         self.target_w = int(self.target.shape[0])
         self.target_h = int(self.target.shape[1])
+        self.x = x
+        self.y = y
+        self.w = w
+        self.h = h
 
     def update_position(self, x, y):
         self.current_pos = (x, y)
+        self.x = x - int(self.target_w / 2)
+        self.y = y - int(self.target_h / 2)
+
 
 
 def get_object_dimensions(x, y, mask):

@@ -18,7 +18,7 @@ class Target_Info:
         if (x != 0) and (y != 0):
             self.target_area = get_object_dimensions(self.current_pos[0], self.current_pos[1], self.target)
         else:
-            self.target_area = 0
+            self.target_area = 1
         self.target_w = int(self.target.shape[0])
         self.target_h = int(self.target.shape[1])
         self.x = x

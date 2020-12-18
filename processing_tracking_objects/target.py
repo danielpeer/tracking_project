@@ -17,7 +17,7 @@ from processing_tracking_objects.target_info import Target_Info
 
 
 class Target:
-    def __init__(self, frame, mask, fps, points):
+    def __init__(self, frame, mask, fps, points, incoming=False):
         self.target_info = Target_Info(frame, mask, points)
         self.search_window = SearchWindow(self.target_info)
         self.kalman_filter = KalmanFilter(self.target_info, fps)
@@ -28,7 +28,8 @@ class Target:
         self.calc_y_pos = None
         self.target_image = None
         self.detection = None
-
+        self.outgoing = False
+        self.incoming = incoming
 
     def update_search_window(self, mask):
         self.search_window.update_search_window(self.target_info, mask)

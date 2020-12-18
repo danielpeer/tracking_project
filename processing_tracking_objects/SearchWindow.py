@@ -8,7 +8,7 @@ class SearchWindow:
         self.search_window = None
         self.top_left_corner_x = None
         self.top_left_corner_y = None
-        self.window_w = target.target_w * 3
+        self.window_w = target.target_w * 2.5
         self.window_h = target.target_h * 2.5
 
 

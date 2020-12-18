@@ -36,6 +36,8 @@ def get_prediction(target, color_image):
     x, y = final_prediction[0][0], final_prediction[1][0]
     target.calc_x_pos = x
     target.calc_y_pos = y
+
+    detect_outgoing_targets(target)
     target.target_info.update_position(y, x)
     target.state_holder.update_previous_pos((x, y))
 
@@ -128,42 +130,41 @@ def perform_tracking():
                             # targets, therefore remove
                             break
                         i += 1
-                    object_detector = ObjectDetector()
+                    #object_detector = ObjectDetector()
                     select_target_flag = True
 
                 else:
-                    incoming_targets = detect_new_targets(resized_frame, object_detector, suspected_targets,targets_lst)
-                    for target in incoming_targets:
-                        target = Target(resized_frame, mask, fps, target)
+                   #incoming_targets = detect_new_targets(resized_frame, object_detector, suspected_targets,targets_lst)
+                   incoming_targets =[]
+                   for target in incoming_targets:
+                        target = Target(resized_frame, mask, fps, target, True)
                         if target.target_info.target_area > 0:
                             targets_lst.append(target)
                 # creating the search windows for the current fra
-                for current_target in targets_lst:
+                current_frame_target = get_target(targets_lst)
+                for current_target in current_frame_target:
                     current_target.update_search_window(mask)
-                  #  if should_add_gaussian_noise:
-                   #    add_gaussian_noise(search_window_lst[i])
-                start_processing = time.time()
-                for target in targets_lst:
-                    thread = threading.Thread(target=get_prediction, args=(target,resized_frame))
-                    threads_lst.append(thread)
-                    thread.start()
+                for target in current_frame_target:
+                    if not target.outgoing:
+                        thread = threading.Thread(target=get_prediction, args=(target,resized_frame))
+                        threads_lst.append(thread)
+                        thread.start()
                 for thread in threads_lst:
                     thread.join()
-                end_processing = time.time()
-            #    print("total time", str(start_processing - end_processing), "sec to run")
                 # calculating predictions for each target
-                for target in targets_lst:
+                for target in current_frame_target:
                     target_mask = np.zeros(frame.shape)
                     cv2.rectangle(target_mask, (
-                        target.calc_y_pos - int(target.target_info.target_h / 2) - 5,
-                        target.calc_x_pos - int(target.target_info.target_w / 2) - 20),
-                                  (target.calc_y_pos + int(target.target_info.target_h / 2 + 5),
-                                   target.calc_x_pos + int(target.target_info.target_w / 3)+20), white, -1)
+                         max(target.calc_y_pos - int(target.target_info.target_h / 2) - 20, 0),
+                         max(target.calc_x_pos - int(target.target_info.target_w / 2) - 20, 0)),
+                         (min(target.calc_y_pos + int(target.target_info.target_h / 2 + 20), 1280),
+                          min(target.calc_x_pos + int(target.target_info.target_w / 3) + 20, 720)), white, -1)
                     target.update_target_image(target_mask.astype(int), frame)
                     if target.detection is None:
-                        target.detection = object_detector.get_target_detect(target.target_image)
+                       #target.detection = object_detector.get_target_detect(target.target_image)
+                       a=5
 
-                for target in targets_lst:
+                for target in current_frame_target:
                     font = cv2.FONT_HERSHEY_SIMPLEX
                     cv2.putText(resized_frame, target.detection, (target.calc_y_pos - int(target.target_info.target_h / 2),target.calc_x_pos - int(target.target_info.target_w / 2)), font, 1, red, 2, cv2.LINE_AA)
                     cv2.rectangle(resized_frame, (
@@ -195,7 +196,8 @@ def perform_tracking():
 
 
 def get_integrated_prediction(corr_prediction, center_of_mass_prediction, state_machine):
-    center_of_mass_prediction = state_machine.center_of_mass_ratio * np.array([[center_of_mass_prediction[0]], [center_of_mass_prediction[1]]])
+    center_of_mass_prediction = state_machine.center_of_mass_ratio * np.array(
+        [[center_of_mass_prediction[0]], [center_of_mass_prediction[1]]])
     corr_prediction = state_machine.corr_ratio * np.array([[corr_prediction[0]], [corr_prediction[1]]])
     return center_of_mass_prediction + corr_prediction
 

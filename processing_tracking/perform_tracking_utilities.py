@@ -107,7 +107,7 @@ def detect_new_targets(image, object_detections, suspected_targets, targets_lst)
                     target_left_before = (target[0], target[1])
                     target_right_before = (target[2], target[3])
                     if do_overlap(target_left, target_right, target_left_before, target_right_before):
-                        if not detect_outgoing_targets(target, target_dim):
+                        if detect_incoming_targets(target, target_dim):
                             targets.append(target_dim)
                             suspected_targets.remove(target)
                         else:
@@ -127,18 +127,35 @@ def detect_new_targets(image, object_detections, suspected_targets, targets_lst)
     return targets
 
 
-def detect_outgoing_targets(frame_before_target_dim, frame_after_target_dim):
+def detect_incoming_targets(frame_before_target_dim, frame_after_target_dim):
     if frame_before_target_dim[3] > 700:
-        if frame_after_target_dim[1] >= frame_before_target_dim[1]-4:
-            return True
+        if frame_after_target_dim[1] >= frame_before_target_dim[1]-3:
+            return False
 
     elif frame_before_target_dim[2] > 1260:
         if frame_after_target_dim[0] >= frame_before_target_dim[0]-3:
-            return True
+            return False
 
     elif frame_before_target_dim[0] < 20:
         if frame_after_target_dim[2] <= frame_before_target_dim[2]:
-            return True
+            return False
+    return True
+
+
+def detect_outgoing_targets(target):
+    if not target.incoming and (target.calc_y_pos + target.target_info.target_h * 0.7 >= 1280 or target.calc_y_pos -
+                                target.target_info.target_h * 0.7 <= 0 or target.calc_x_pos +
+                                target.target_info.target_w * 0.7 >= 720 or target.calc_x_pos -
+                                target.target_info.target_w * 0.7 <= 0):
+        target.outgoing = True
+
+
+def get_target(targets):
+    not_outgoing_targets = []
+    for target in targets:
+        if not target.outgoing:
+            not_outgoing_targets.append(target)
+    return not_outgoing_targets
 
 
 def do_overlap(l1, r1, l2, r2):

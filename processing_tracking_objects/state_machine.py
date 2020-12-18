@@ -51,17 +51,17 @@ class StateMachine:
         corr_dist = 2 ** euclidean((cX, cY), correlation_prediction_window)
         center_of_mass_dist = 2 ** euclidean((cX, cY), center_of_mass_window)
         current_object_area = cv2.contourArea(object_contour)
-        self.previous_area = max(sum(self.previous_areas) / len(self.previous_areas), 1)
+        self.previous_area = sum(self.previous_areas) / len(self.previous_areas)
         if cv2.pointPolygonTest(contour, center_of_mass_window, True) > 0:
-            self.corr_ratio = center_of_mass_dist /(corr_dist + center_of_mass_dist)
-            self.center_of_mass_ratio = corr_dist /(corr_dist + center_of_mass_dist)
+            self.corr_ratio = max(0.3, center_of_mass_dist / (corr_dist + center_of_mass_dist))
+            self.center_of_mass_ratio = 1 - self.corr_ratio
         else:
             self.corr_ratio = 1
             self.center_of_mass_ratio = 0
         print(self.corr_ratio, self.center_of_mass_ratio)
         pervious_before = False
         if self.previous_state == VISIBLE_OBJECT:
-            self._get_current_state_from_visible_object(current_object_area, object_current_pos)
+            self._get_current_state_from_visible_object(current_object_area)
             pervious_before = True
 
         elif self.previous_state == OVERLAP:
@@ -70,13 +70,13 @@ class StateMachine:
         elif self.previous_state == CONCEALMENT:
             self._get_current_state_from_concealment(current_object_area)
 
-        if self.previous_state == VISIBLE_OBJECT and pervious_before:
+        if self.previous_state == VISIBLE_OBJECT and pervious_before and self.corr_ratio:
             if len(self.previous_areas) == 5:
                 self.previous_areas.pop(0)
             self.previous_areas.append(current_object_area)
         return self.previous_state
 
-    def _get_current_state_from_visible_object(self, current_object_area, object_current_pos):
+    def _get_current_state_from_visible_object(self, current_object_area):
        # print("object is visible")
         if current_object_area / self.previous_area < 0.6:
             self.previous_state = CONCEALMENT
@@ -94,7 +94,7 @@ class StateMachine:
 
     def _get_current_state_from_concealment(self, current_object_area):
        # print("concealment")
-        if current_object_area < self.object_area * 0.7:
+        if current_object_area < self.previous_area * 0.7:
             self.previous_state = CONCEALMENT
         else:
             self.previous_state = VISIBLE_OBJECT

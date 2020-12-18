@@ -23,7 +23,7 @@ class GenderDetector:
                                                   batch_size=1,
                                                   class_mode='binary'
                                                   )
-        validation_dataset = validation.flow_from_directory(os.path.join(current_dir, 'train'),
+        validation_dataset = validation.flow_from_directory(os.path.join(current_dir, 'validations'),
                                                             target_size=(100, 100),
                                                             batch_size=1,
                                                             class_mode='binary'
@@ -62,9 +62,9 @@ class GenderDetector:
 
         model.fit_generator(train_dataset,
                             steps_per_epoch=50,
-                            epochs=15,
+                            epochs=12,
                             validation_data=validation_dataset,
-                            validation_steps=50)
+                            validation_steps=40)
 
         self.model = model
 

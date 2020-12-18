@@ -34,6 +34,5 @@ class ObjectDetector:
             for eachObject in detections:
                 if eachObject["name"] == 'person':
                     dims = eachObject['box_points']
-                    current_img = input_image[dims[1]:dims[3], dims[0]:dims[2]]
                     targets.append(dims)
             return targets

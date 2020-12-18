@@ -1,6 +1,7 @@
 from filters.calculate_center_of_mass import *
 import math
 from scipy.spatial.distance import euclidean
+import cv2
 
 VISIBLE_OBJECT = 0
 OVERLAP = 1
@@ -18,12 +19,12 @@ class StateMachine:
         self.corr_ratio = 0
         self.center_of_mass_ratio = 0
 
-    def get_current_state(self, search_window_info, center_of_mass, correlation_prediction):
-        center_of_mass_window = (center_of_mass[1] - search_window_info.top_left_corner_y,
-                                 center_of_mass[0] - search_window_info.top_left_corner_x)
+    def get_current_state(self, target, search_window_info, center_of_mass, correlation_prediction):
+        center_of_mass_window = (center_of_mass[0] - search_window_info.top_left_corner_x,
+                                 center_of_mass[1] - search_window_info.top_left_corner_y)
 
-        correlation_prediction_window = (correlation_prediction[1] - search_window_info.top_left_corner_y,
-                                         correlation_prediction[0] - search_window_info.top_left_corner_x)
+        correlation_prediction_window = (correlation_prediction[0] - search_window_info.top_left_corner_x,
+                                         correlation_prediction[1] - search_window_info.top_left_corner_y)
         object_contour = None
         search_window = search_window_info.search_window
         contours, hierarchy = cv2.findContours(search_window, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -32,7 +33,6 @@ class StateMachine:
             corr_dist = cv2.pointPolygonTest(contour, correlation_prediction_window, True)
             if corr_dist >= 0:
                 object_contour = contour
-                object_current_pos = (correlation_prediction[1], correlation_prediction[0])
                 break
         closest_contour = None
         closest_contour_distance = math.inf
@@ -52,17 +52,24 @@ class StateMachine:
         center_of_mass_dist = 2 ** euclidean((cX, cY), center_of_mass_window)
         current_object_area = cv2.contourArea(object_contour)
         self.previous_area = sum(self.previous_areas) / len(self.previous_areas)
-        if cv2.pointPolygonTest(contour, center_of_mass_window, True) > 0:
-            self.corr_ratio = max(0.3, center_of_mass_dist / (corr_dist + center_of_mass_dist))
+        if cv2.pointPolygonTest(object_contour, center_of_mass_window, True) > 0:
+            self.corr_ratio = max(0.4, center_of_mass_dist / (corr_dist + center_of_mass_dist))
             self.center_of_mass_ratio = 1 - self.corr_ratio
+
         else:
             self.corr_ratio = 1
             self.center_of_mass_ratio = 0
         print(self.corr_ratio, self.center_of_mass_ratio)
-        pervious_before = False
+
+        x, y, w, h = cv2.boundingRect(object_contour)
+        print(w, target.target_info.target_w, h, target.target_info.target_h)
+        if 0.84 * target.target_info.target_h < h < target.target_info.target_h * 0.9 and 0.84 * target.target_info.target_w < w < target.target_info.target_w * 0.9 :
+            target.target_info.target_w = w + 5
+            target.target_info.target_h = h + 7
+        previous_before = False
         if self.previous_state == VISIBLE_OBJECT:
             self._get_current_state_from_visible_object(current_object_area)
-            pervious_before = True
+            previous_before = True
 
         elif self.previous_state == OVERLAP:
             self._get_current_state_from_overlap(current_object_area)
@@ -70,7 +77,7 @@ class StateMachine:
         elif self.previous_state == CONCEALMENT:
             self._get_current_state_from_concealment(current_object_area)
 
-        if self.previous_state == VISIBLE_OBJECT and pervious_before and self.corr_ratio:
+        if self.previous_state == VISIBLE_OBJECT and previous_before and self.corr_ratio < 0.5:
             if len(self.previous_areas) == 5:
                 self.previous_areas.pop(0)
             self.previous_areas.append(current_object_area)
@@ -80,13 +87,13 @@ class StateMachine:
        # print("object is visible")
         if current_object_area / self.previous_area < 0.6:
             self.previous_state = CONCEALMENT
-        elif current_object_area / self.previous_area > 1.1:
+        elif current_object_area / self.previous_area > 1.0:
             self.previous_state = OVERLAP
         else:
             self.previous_state = VISIBLE_OBJECT
 
     def _get_current_state_from_overlap(self, current_object_area):
-        print("overlap")
+        #print("overlap")
         if current_object_area < self.previous_area:
             self.previous_state = VISIBLE_OBJECT
         else:

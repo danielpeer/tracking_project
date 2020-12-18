@@ -8,9 +8,8 @@ class SearchWindow:
         self.search_window = None
         self.top_left_corner_x = None
         self.top_left_corner_y = None
-        self.window_w = target.target_w * 2.5
-        self.window_h = target.target_h * 2.5
-
+        self.window_w = target.target_w
+        self.window_h = target.target_h
 
     def update_search_window(self, target_info, mask):
         """
@@ -20,14 +19,12 @@ class SearchWindow:
             gray - the frame in grayscale
             returns - the top left corner coordinates of the search window and the search windows itself
          """
-        y, x = target_info.current_pos
+        x, y = target_info.current_pos
         x_window = x
         y_window = y
-        window_w = target_info.target_w
-        window_h = target_info.target_h
-        # window_w = self.window_w
-        # window_h = self.window_h
-        gray_width, gray_height = mask.shape
+        window_w = target_info.target_w * 1.1
+        window_h = target_info.target_h * 1.1
+        gray_height, gray_width = mask.shape
         top_left_corner_x = x - (window_w / 2)
         top_left_corner_y = y - (window_h / 2)
         if x - (window_w / 2) < 0:
@@ -42,11 +39,10 @@ class SearchWindow:
         if y + (window_h / 2) > gray_height:
             y_window = gray_height - (window_h / 2)
             top_left_corner_y = gray_height - window_h
-        search_window = mask[int(x_window - math.floor(window_w / 2)): int(x_window + math.floor(window_w / 2)),
-                        int(y_window - math.floor(window_h / 2)): int(y_window + math.floor(window_h / 2))]
+        search_window = mask[int(y_window - math.floor(window_h / 2)): int(y_window + math.floor(window_h / 2)),
+                        int(x_window - math.floor(window_w / 2)): int(x_window + math.floor(window_w / 2))]
         self.top_left_corner_x = top_left_corner_x
         self.top_left_corner_y = top_left_corner_y
         self.window_h = window_h
         self.window_w = window_w
         self.search_window = search_window
-

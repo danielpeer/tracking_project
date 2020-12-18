@@ -143,9 +143,9 @@ def detect_incoming_targets(frame_before_target_dim, frame_after_target_dim):
 
 
 def detect_outgoing_targets(target):
-    if not target.incoming and (target.calc_y_pos + target.target_info.target_h * 0.7 >= 1280 or target.calc_y_pos -
+    if not target.incoming and (target.calc_y_pos + target.target_info.target_h * 0.7 >= 720 or target.calc_y_pos -
                                 target.target_info.target_h * 0.7 <= 0 or target.calc_x_pos +
-                                target.target_info.target_w * 0.7 >= 720 or target.calc_x_pos -
+                                target.target_info.target_w * 0.7 >= 1280 or target.calc_x_pos -
                                 target.target_info.target_w * 0.7 <= 0):
         target.outgoing = True
 

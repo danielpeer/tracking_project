@@ -4,7 +4,7 @@ from queue import Queue
 from filters.corr_tracker import *
 from filters.kalman_filter import *
 from processing_tracking_objects.target import Target
-from processing_tracking_objects.target_info import *
+from processing_tracking_objects.targetinfo import *
 from processing_tracking_objects.SearchWindow import *
 from processing_tracking_objects.state_machine import *
 from perform_tracking_utilities import *
@@ -25,7 +25,7 @@ def get_prediction(target, color_image):
     thread_center_of_mass.join()
     center_of_mass_prediction = results[1]
     correlation_prediction = results[0]
-    current_state = target.state_holder.get_current_state(target.search_window,
+    current_state = target.state_holder.get_current_state(target, target.search_window,
                                                           center_of_mass_prediction, correlation_prediction)
     prediction = get_integrated_prediction(correlation_prediction, center_of_mass_prediction, target.state_holder)
     if current_state == OVERLAP or current_state == CONCEALMENT:
@@ -38,7 +38,7 @@ def get_prediction(target, color_image):
     target.calc_y_pos = y
 
     detect_outgoing_targets(target)
-    target.target_info.update_position(y, x)
+    target.target_info.update_position(x, y)
     target.state_holder.update_previous_pos((x, y))
 
 def perform_tracking():
@@ -168,10 +168,10 @@ def perform_tracking():
                     font = cv2.FONT_HERSHEY_SIMPLEX
                     cv2.putText(resized_frame, target.detection, (target.calc_y_pos - int(target.target_info.target_h / 2),target.calc_x_pos - int(target.target_info.target_w / 2)), font, 1, red, 2, cv2.LINE_AA)
                     cv2.rectangle(resized_frame, (
-                        target.calc_y_pos - int(target.target_info.target_h / 2),
-                        target.calc_x_pos - int(target.target_info.target_w / 2)),
-                                  (target.calc_y_pos + int(target.target_info.target_h / 2),
-                                   target.calc_x_pos + int(target.target_info.target_w / 3)), red, 1)
+                        target.calc_x_pos - int(target.target_info.target_w / 2),
+                        target.calc_y_pos - int(target.target_info.target_h / 2)),
+                        (target.calc_x_pos + int(target.target_info.target_w / 2),
+                         target.calc_y_pos + int(target.target_info.target_h / 2)), red, 1)
 
                 # Display the resulting frame
                 cv2.imshow('Frame', resized_frame)

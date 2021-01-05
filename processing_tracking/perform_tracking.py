@@ -7,13 +7,13 @@ from processing_tracking_objects.target import Target
 from processing_tracking_objects.targetinfo import *
 from processing_tracking_objects.SearchWindow import *
 from processing_tracking_objects.state_machine import *
-from perform_tracking_utilities import *
 from image_processing.stabilize import *
 from ObjetRecognition.ObjectDetection import *
 import time
 
 system_mode = "debug "
 should_add_gaussian_noise = False
+
 
 def get_prediction(target, color_image):
     results = [None, None]
@@ -25,7 +25,7 @@ def get_prediction(target, color_image):
     thread_center_of_mass.join()
     center_of_mass_prediction = results[1]
     correlation_prediction = results[0]
-    current_state = target.state_holder.get_current_state(target, target.search_window,
+    current_state = target.state_holder.get_current_state(target.search_window,
                                                           center_of_mass_prediction, correlation_prediction)
     prediction = get_integrated_prediction(correlation_prediction, center_of_mass_prediction, target.state_holder)
     if current_state == OVERLAP or current_state == CONCEALMENT:
@@ -38,15 +38,12 @@ def get_prediction(target, color_image):
     target.calc_y_pos = y
 
     detect_outgoing_targets(target)
-    target.target_info.update_position(x, y)
+    target.target_info.update_position(y, x)
     target.state_holder.update_previous_pos((x, y))
 
-def perform_tracking():
+
+def perform_tracking(input_video):
     start_time_prog = time.time()
-    if system_mode != "debug ":
-        input_video = input("Please enter a video path:\n")
-    else:
-        input_video = "C:\\Users\\97252\\Downloads\\pp.mp4"
     try:
         cap = cv2.VideoCapture(input_video)
         select_target_flag = False
@@ -95,7 +92,7 @@ def perform_tracking():
 
         resized_frame_dim = get_frame_resize_dim(frame.shape)
         # Defining the codec and creating VideoWriter object. The output is stored in 'Vid1_Binary.avi' file.
-        out1 = cv2.VideoWriter('berlin_walk.avi', cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), fps,
+        out1 = cv2.VideoWriter('berlin_walk.avi', cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), fps/3,
                                (frame.shape[1], frame.shape[0]))
         red = [0, 0, 255]
 
@@ -111,7 +108,7 @@ def perform_tracking():
 
             if ret:
                 # adjusting frame size to fit screen properly
-               # resized_frame = frame_scaling(frame)
+                # resized_frame = frame_scaling(frame)
                 resized_frame = frame
                 # converting to grayscale in order to calculate correlation and applying background subtraction mask
                 gray = cv2.cvtColor(resized_frame, cv2.COLOR_BGR2GRAY)
@@ -130,13 +127,13 @@ def perform_tracking():
                             # targets, therefore remove
                             break
                         i += 1
-                    #object_detector = ObjectDetector()
+                    object_detector = ObjectDetector()
                     select_target_flag = True
 
                 else:
-                   #incoming_targets = detect_new_targets(resized_frame, object_detector, suspected_targets,targets_lst)
-                   incoming_targets =[]
-                   for target in incoming_targets:
+                    incoming_targets = detect_new_targets(resized_frame, object_detector, suspected_targets,
+                    targets_lst)
+                    for target in incoming_targets:
                         target = Target(resized_frame, mask, fps, target, True)
                         if target.target_info.target_area > 0:
                             targets_lst.append(target)
@@ -146,7 +143,7 @@ def perform_tracking():
                     current_target.update_search_window(mask)
                 for target in current_frame_target:
                     if not target.outgoing:
-                        thread = threading.Thread(target=get_prediction, args=(target,resized_frame))
+                        thread = threading.Thread(target=get_prediction, args=(target, resized_frame))
                         threads_lst.append(thread)
                         thread.start()
                 for thread in threads_lst:
@@ -155,23 +152,25 @@ def perform_tracking():
                 for target in current_frame_target:
                     target_mask = np.zeros(frame.shape)
                     cv2.rectangle(target_mask, (
-                         max(target.calc_y_pos - int(target.target_info.target_h / 2) - 20, 0),
-                         max(target.calc_x_pos - int(target.target_info.target_w / 2) - 20, 0)),
-                         (min(target.calc_y_pos + int(target.target_info.target_h / 2 + 20), 1280),
-                          min(target.calc_x_pos + int(target.target_info.target_w / 3) + 20, 720)), white, -1)
+                        max(target.calc_y_pos - int(target.target_info.target_h / 2) - 20, 0),
+                        max(target.calc_x_pos - int(target.target_info.target_w / 2) - 20, 0)),
+                                  (min(target.calc_y_pos + int(target.target_info.target_h / 2 + 20), 1280),
+                                   min(target.calc_x_pos + int(target.target_info.target_w / 3) + 20, 720)), white, -1)
                     target.update_target_image(target_mask.astype(int), frame)
                     if target.detection is None:
-                       #target.detection = object_detector.get_target_detect(target.target_image)
-                       a=5
+                        target.detection = object_detector.get_target_detect(target.target_image)
+
 
                 for target in current_frame_target:
                     font = cv2.FONT_HERSHEY_SIMPLEX
-                    cv2.putText(resized_frame, target.detection, (target.calc_y_pos - int(target.target_info.target_h / 2),target.calc_x_pos - int(target.target_info.target_w / 2)), font, 1, red, 2, cv2.LINE_AA)
+                    cv2.putText(resized_frame, target.detection, (
+                    target.calc_y_pos - int(target.target_info.target_h / 2),
+                    target.calc_x_pos - int(target.target_info.target_w / 2)), font, 1, red, 2, cv2.LINE_AA)
                     cv2.rectangle(resized_frame, (
-                        target.calc_x_pos - int(target.target_info.target_w / 2),
-                        target.calc_y_pos - int(target.target_info.target_h / 2)),
-                        (target.calc_x_pos + int(target.target_info.target_w / 2),
-                         target.calc_y_pos + int(target.target_info.target_h / 2)), red, 1)
+                        target.calc_y_pos - int(target.target_info.target_h / 2),
+                        target.calc_x_pos - int(target.target_info.target_w / 2)),
+                                  (target.calc_y_pos + int(target.target_info.target_h / 2),
+                                   target.calc_x_pos + int(target.target_info.target_w / 3)), red, 1)
 
                 # Display the resulting frame
                 cv2.imshow('Frame', resized_frame)
@@ -202,4 +201,3 @@ def get_integrated_prediction(corr_prediction, center_of_mass_prediction, state_
     return center_of_mass_prediction + corr_prediction
 
 
-perform_tracking()

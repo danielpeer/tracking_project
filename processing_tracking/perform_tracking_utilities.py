@@ -106,8 +106,9 @@ def detect_new_targets(image, object_detections, suspected_targets, targets_lst)
                 for target in suspected_targets:
                     target_left_before = (target[0], target[1])
                     target_right_before = (target[2], target[3])
-                    if do_overlap(target_left, target_right, target_left_before, target_right_before):
+                    if do_overlap(target_left, target_right, target_left_before, target_right_before, True):
                         if detect_incoming_targets(target, target_dim):
+                            do_overlap(target_left, target_right, target_left_before, target_right_before, True)
                             targets.append(target_dim)
                             suspected_targets.remove(target)
                         else:
@@ -117,10 +118,10 @@ def detect_new_targets(image, object_detections, suspected_targets, targets_lst)
                 if should_check_second_loop:
                     overlap = False
                     for target in targets_lst:
-                        current_target_l = (target.target_info.x, target.target_info.y)
+                        current_target_l = (target.target_info.current_pos[0], target.target_info.current_pos[1])
                         current_target_r = (
-                            target.target_info.x + target.target_info.w, target.target_info.y + target.target_info.h)
-                        if do_overlap(target_left, target_right, current_target_l, current_target_r):
+                            target.target_info.current_pos[0] + target.target_info.w, target.target_info.current_pos[1] + target.target_info.target_h)
+                        if do_overlap(target_left, target_right, current_target_l, current_target_r, target.incoming):
                             overlap = True
                     if not overlap:
                         suspected_targets.append(target_dim)
@@ -129,24 +130,24 @@ def detect_new_targets(image, object_detections, suspected_targets, targets_lst)
 
 def detect_incoming_targets(frame_before_target_dim, frame_after_target_dim):
     if frame_before_target_dim[3] > 700:
-        if frame_after_target_dim[1] >= frame_before_target_dim[1]-3:
+        if frame_after_target_dim[1] >= frame_before_target_dim[1]-3 or frame_before_target_dim[2] > 1160:
             return False
 
     elif frame_before_target_dim[2] > 1260:
-        if frame_after_target_dim[0] >= frame_before_target_dim[0]-3:
+        if frame_after_target_dim[0] >= frame_before_target_dim[0]-2 or frame_after_target_dim[3] < 400:
             return False
 
     elif frame_before_target_dim[0] < 20:
-        if frame_after_target_dim[2] <= frame_before_target_dim[2]:
+        if frame_after_target_dim[2] <= frame_before_target_dim[2] or frame_before_target_dim[1] < 100:
             return False
     return True
 
 
 def detect_outgoing_targets(target):
-    if not target.incoming and (target.calc_y_pos + target.target_info.target_h * 0.7 >= 720 or target.calc_y_pos -
-                                target.target_info.target_h * 0.7 <= 0 or target.calc_x_pos +
-                                target.target_info.target_w * 0.7 >= 1280 or target.calc_x_pos -
-                                target.target_info.target_w * 0.7 <= 0):
+    if not target.incoming and (target.calc_y_pos + target.target_info.target_h/2 >= 1280 or target.calc_y_pos -
+                                target.target_info.target_h/2 <= 0 or target.calc_x_pos +
+                                target.target_info.target_w/2 >= 720 or target.calc_x_pos -
+                                target.target_info.target_w/2 <= 0) and not target.target_info.start_on_side:
         target.outgoing = True
 
 
@@ -158,19 +159,33 @@ def get_target(targets):
     return not_outgoing_targets
 
 
-def do_overlap(l1, r1, l2, r2):
+def do_overlap(l1, r1, l2, r2, same_range):
     # If one rectangle is on left side of other
+    if same_range:
+        x1 = range(l1[0], r1[0])
+        x2 = range(l2[0], r2[0])
+        xs = set(x1)
+        z1 = xs.intersection(x2)
 
-    x1 = range(l1[0], r1[0])
-    x2 = range(l2[0], r2[0])
-    xs = set(x1)
-    z1 = xs.intersection(x2)
+        y1 = range(l1[1], r1[1])
+        y2 = range(l2[1], r2[1])
+        ys = set(y1)
+        z2 = ys.intersection(y2)
 
-    y1 = range(l1[1], r1[1])
-    y2 = range(l2[1], r2[1])
-    ys = set(y1)
-    z2 = ys.intersection(y2)
+        if len(z1) > 0 and len(z2):
+            return True
+    else:
+        x1 = range(l1[0] + 20, r1[0] - 20)
+        x2 = range(l2[0] + 20, r2[0] - 20)
+        xs = set(x1)
+        z1 = xs.intersection(x2)
 
-    if len(z1) > 0 and len(z2):
-        return True
+        y1 = range(l1[1] + 20, r1[1] - 20)
+        y2 = range(l2[1] + 20, r2[1] - 20)
+        ys = set(y1)
+        z2 = ys.intersection(y2)
+
+        if len(z1) > 0 and len(z2) > 0:
+            return True
+
     return False

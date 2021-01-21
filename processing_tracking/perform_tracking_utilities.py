@@ -151,7 +151,7 @@ def detect_outgoing_targets(target):
         target.outgoing = True
 
 
-def get_target(targets):
+def get_targets(targets):
     not_outgoing_targets = []
     for target in targets:
         if not target.outgoing:

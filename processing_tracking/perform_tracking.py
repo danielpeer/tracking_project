@@ -1,5 +1,8 @@
 import threading
 from queue import Queue
+from tkinter import *
+from PIL import Image, ImageTk
+from IPython.terminal.pt_inputhooks import tk
 
 from filters.corr_tracker import *
 from filters.kalman_filter import *
@@ -42,7 +45,7 @@ def get_prediction(target, color_image):
     target.state_holder.update_previous_pos((x, y))
 
 
-def perform_tracking(input_video):
+def perform_tracking(input_video, gender_dict):
     start_time_prog = time.time()
     try:
         cap = cv2.VideoCapture(input_video)
@@ -114,7 +117,6 @@ def perform_tracking(input_video):
                 gray = cv2.cvtColor(resized_frame, cv2.COLOR_BGR2GRAY)
                 mask = cv2.absdiff(gray_background, gray)
                 _, mask = cv2.threshold(mask, 60, 255, cv2.THRESH_BINARY)
-                cv2.imshow('mask', mask)
                 if not select_target_flag:  # creating the target only once
                     targets_lst = []
                     threads_lst = []
@@ -138,7 +140,7 @@ def perform_tracking(input_video):
                         if target.target_info.target_area > 0:
                             targets_lst.append(target)
                 # creating the search windows for the current fra
-                current_frame_target = get_target(targets_lst)
+                current_frame_target = get_targets(targets_lst)
                 for current_target in current_frame_target:
                     current_target.update_search_window(mask)
                 for target in current_frame_target:
@@ -158,9 +160,9 @@ def perform_tracking(input_video):
                                    min(target.calc_x_pos + int(target.target_info.target_w / 3) + 20, 720)), white, -1)
                     target.update_target_image(target_mask.astype(int), frame)
                     if target.detection is None:
-                        target.detection = object_detector.get_target_detect(target.target_image)
+                       target.detection = object_detector.get_target_detect(target.target_image)
 
-
+                update_dict(targets_lst, gender_dict)
                 for target in current_frame_target:
                     font = cv2.FONT_HERSHEY_SIMPLEX
                     cv2.putText(resized_frame, target.detection, (
@@ -172,7 +174,6 @@ def perform_tracking(input_video):
                                   (target.calc_y_pos + int(target.target_info.target_h / 2),
                                    target.calc_x_pos + int(target.target_info.target_w / 3)), red, 1)
 
-                # Display the resulting frame
                 cv2.imshow('Frame', resized_frame)
                 # Write the frame into the file
                 out1.write(resized_frame)
@@ -200,4 +201,23 @@ def get_integrated_prediction(corr_prediction, center_of_mass_prediction, state_
     corr_prediction = state_machine.corr_ratio * np.array([[corr_prediction[0]], [corr_prediction[1]]])
     return center_of_mass_prediction + corr_prediction
 
+
+def update_dict(targets, gender_dict):
+    males = 0
+    females = 0
+    current_targets = 0
+    outgoing_targets = 0
+    for target in targets:
+        if target.detection == "female":
+            females += 1
+        else:
+            males += 1
+        if target.outgoing:
+            outgoing_targets += 1
+        else:
+            current_targets += 1
+    gender_dict['male'].append(males)
+    gender_dict['female'].append(females)
+    gender_dict['outgoing_targets'].append(outgoing_targets)
+    gender_dict['current_targets'].append(current_targets)
 

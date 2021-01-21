@@ -8,10 +8,10 @@ from filters.corr_tracker import *
 from filters.kalman_filter import *
 from processing_tracking_objects.target import Target
 from processing_tracking_objects.targetinfo import *
-from processing_tracking_objects.SearchWindow import *
+from processing_tracking_objects.search_window import *
 from processing_tracking_objects.state_machine import *
 from image_processing.stabilize import *
-from ObjetRecognition.ObjectDetection import *
+from object_recognition.object_detector import *
 import time
 
 system_mode = "debug "

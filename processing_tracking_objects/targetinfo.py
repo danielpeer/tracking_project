@@ -6,7 +6,7 @@ from random import randint
 
 # from processing_tracking.perform_tracking_utilities import get_square_center, click
 
-class Target_Info:
+class TargetInfo:
     def __init__(self, frame, mask, points):
         if not points:
             x, y, w, h = get_target(frame)

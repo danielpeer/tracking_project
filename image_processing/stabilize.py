@@ -49,7 +49,7 @@ def video_stabilization(cap):
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
 
     # Set up output video
-    out = cv2.VideoWriter('C:\\Users\\97252\\Downloads\\stabilized.avi', fourcc, fps, (w, h))
+    out = cv2.VideoWriter('.\\stabilized.avi', fourcc, fps, (w, h))
 
     # first frame:
     ret, prev = cap.read()

@@ -3,6 +3,7 @@ from tkinter.filedialog import askopenfilename, Misc, asksaveasfile, asksaveasfi
 from PIL import ImageTk, Image
 import cv2
 from processing_tracking.perform_tracking import perform_tracking
+import os
 
 males = 0
 female = 0
@@ -38,7 +39,7 @@ class App:
 
     def First_Screen(self):
         self.background_image = PhotoImage(
-            file="D:\\Users\\97252\\PycharmProjects\\tracking_project\\GUI\\background.PNG")
+            file= ".\\background.PNG")
         self.canvas.pack(fill="both", expand=True)
         self.canvas.create_image(0, 0, image=self.background_image, anchor="nw")
         self.canvas.create_text(700, 250, text="Welcome to tracking project", font=("Helvetica", 50), fill='white')
@@ -48,7 +49,7 @@ class App:
         self.root.update()
 
     def process_video(self, filename):
-        self.background_image = PhotoImage(file="D:\\Users\\97252\\PycharmProjects\\tracking_project\\GUI\\network.png")
+        self.background_image = PhotoImage(file=".\\network.png")
         self.canvas.delete("all")
         self.canvas.create_image(0, 0, image=self.background_image, anchor="nw")
         self.canvas.create_text(700, 250, text="Processing the video, please wait ...", font=("Helvetica", 50),

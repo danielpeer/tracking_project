@@ -61,7 +61,7 @@ def perform_tracking(input_video, gender_dict):
 
         video_stabilization(cap)
         cap.release()
-        input_video = 'C:\\Users\\97252\\Downloads\\stabilized.avi'
+        input_video = '.\\stabilized.avi'
         cap = cv2.VideoCapture(input_video)
         if not cap.isOpened():
             print("Error opening video stream or file")
@@ -95,7 +95,7 @@ def perform_tracking(input_video, gender_dict):
 
         resized_frame_dim = get_frame_resize_dim(frame.shape)
         # Defining the codec and creating VideoWriter object. The output is stored in 'Vid1_Binary.avi' file.
-        out1 = cv2.VideoWriter('berlin_walk.avi', cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), fps/3,
+        out1 = cv2.VideoWriter('output.avi', cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), fps/3,
                                (frame.shape[1], frame.shape[0]))
         red = [0, 0, 255]
 
